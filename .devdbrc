@@ -1,0 +1,11 @@
+[
+    {
+        "name": "symfony voteo dev code db",
+        "type": "postgres",
+        "host": "127.0.0.1",
+        "port": 5432,
+        "username": "app",
+        "password": "!ChangeMe!",
+        "database": "app"
+    }
+]
