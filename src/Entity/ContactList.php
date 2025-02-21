@@ -21,7 +21,7 @@ class ContactList
     /**
      * @var Collection<int, Contact>
      */
-    #[ORM\OneToMany(targetEntity: Contact::class, mappedBy: 'list', orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: Contact::class, mappedBy: 'list', orphanRemoval: true, cascade:['persist'])]
     private Collection $contacts;
 
     public function __construct()

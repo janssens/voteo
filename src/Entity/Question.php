@@ -18,7 +18,7 @@ class Question
 
     #[ORM\ManyToOne(inversedBy: 'questions')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?User $owner = null;
+    private User $owner ;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $intro = null;
@@ -27,12 +27,12 @@ class Question
     private ?string $outro = null;
 
     #[ORM\Column]
-    private ?bool $is_multichoices = null;
+    private bool $is_multichoices = false;
 
     /**
      * @var Collection<int, Choice>
      */
-    #[ORM\OneToMany(targetEntity: Choice::class, mappedBy: 'question', orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: Choice::class, mappedBy: 'question', orphanRemoval: true, cascade: ['persist'])]
     private Collection $choices;
 
     #[ORM\Column(length: 255)]

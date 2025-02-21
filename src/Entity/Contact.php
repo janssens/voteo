@@ -121,4 +121,9 @@ class Contact
 
         return $this;
     }
+
+    public function __tostring(): string
+    {
+        return $this->getFirstname().' '.$this->getLastname().' <'.$this->getEmail().'>';
+    }
 }

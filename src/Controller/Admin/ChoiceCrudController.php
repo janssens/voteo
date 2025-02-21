@@ -2,19 +2,17 @@
 
 namespace App\Controller\Admin;
 
-use App\Entity\ContactList;
+use App\Entity\Choice;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
-use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextEditorField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 
-class ContactListCrudController extends AbstractCrudController
+class ChoiceCrudController extends AbstractCrudController
 {
     public static function getEntityFqcn(): string
     {
-        return ContactList::class;
+        return Choice::class;
     }
 
     
@@ -22,11 +20,8 @@ class ContactListCrudController extends AbstractCrudController
     {
         return [
             IdField::new('id')->hideOnForm(),
-            TextField::new('name','Nom'),
-            CollectionField::new('contacts','Contacts')
-            ->setEntryIsComplex(true)
-            ->useEntryCrudForm(ContactCrudController::class),
+            TextField::new('label','Proposition'),
         ];
     }
-    
+   
 }
