@@ -28,6 +28,9 @@ class Choice
     #[ORM\OneToMany(targetEntity: Answer::class, mappedBy: 'choice', orphanRemoval: true)]
     private Collection $answers;
 
+    #[ORM\Column(length: 15, nullable: true)]
+    private ?string $color = null;
+
     public function __construct()
     {
         $this->answers = new ArrayCollection();
@@ -88,6 +91,18 @@ class Choice
                 $answer->setChoice(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getColor(): ?string
+    {
+        return $this->color;
+    }
+
+    public function setColor(?string $color): static
+    {
+        $this->color = $color;
 
         return $this;
     }

@@ -32,7 +32,6 @@ class QuestionCrudController extends AbstractCrudController
     {
         return [
             IdField::new('id')->hideOnForm(),
-            HiddenField::new('owner'),
             TextField::new('subject','Sujet'),
             TextEditorField::new('intro','Texte avant question'),
             CollectionField::new('choices','Choix')->useEntryCrudForm(ChoiceCrudController::class),

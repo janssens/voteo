@@ -4,6 +4,7 @@ namespace App\Controller\Admin;
 
 use App\Entity\Choice;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ColorField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextEditorField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
@@ -20,7 +21,8 @@ class ChoiceCrudController extends AbstractCrudController
     {
         return [
             IdField::new('id')->hideOnForm(),
-            TextField::new('label','Proposition'),
+            TextField::new('label','Option'),
+            ColorField::new('color','Couleur'),
         ];
     }
    
