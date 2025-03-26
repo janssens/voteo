@@ -24,9 +24,16 @@ class ContactList
     #[ORM\OneToMany(targetEntity: Contact::class, mappedBy: 'list', orphanRemoval: true, cascade:['persist'])]
     private Collection $contacts;
 
+    /**
+     * @var Collection<int, Question>
+     */
+    #[ORM\ManyToMany(targetEntity: Question::class, mappedBy: 'lists')]
+    private Collection $questions;
+
     public function __construct()
     {
         $this->contacts = new ArrayCollection();
+        $this->questions = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -74,5 +81,37 @@ class ContactList
         }
 
         return $this;
+    }
+
+    /**
+     * @return Collection<int, Question>
+     */
+    public function getQuestions(): Collection
+    {
+        return $this->questions;
+    }
+
+    public function addQuestion(Question $question): static
+    {
+        if (!$this->questions->contains($question)) {
+            $this->questions->add($question);
+            $question->addList($this);
+        }
+
+        return $this;
+    }
+
+    public function removeQuestion(Question $question): static
+    {
+        if ($this->questions->removeElement($question)) {
+            $question->removeList($this);
+        }
+
+        return $this;
+    }
+
+    public function __tostring(): string
+    {
+        return $this->getName();
     }
 }

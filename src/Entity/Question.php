@@ -38,9 +38,20 @@ class Question
     #[ORM\Column(length: 255)]
     private ?string $subject = null;
 
+    /**
+     * @var Collection<int, ContactList>
+     */
+    #[ORM\ManyToMany(targetEntity: ContactList::class, inversedBy: 'questions')]
+    private Collection $lists;
+
+    #[ORM\Column]
+    private ?bool $sent = false;
+
     public function __construct()
     {
         $this->choices = new ArrayCollection();
+        $this->lists = new ArrayCollection();
+        $this->sent = false;
     }
 
     public function getId(): ?int
@@ -134,6 +145,42 @@ class Question
     public function setSubject(string $subject): static
     {
         $this->subject = $subject;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, ContactList>
+     */
+    public function getLists(): Collection
+    {
+        return $this->lists;
+    }
+
+    public function addList(ContactList $list): static
+    {
+        if (!$this->lists->contains($list)) {
+            $this->lists->add($list);
+        }
+
+        return $this;
+    }
+
+    public function removeList(ContactList $list): static
+    {
+        $this->lists->removeElement($list);
+
+        return $this;
+    }
+
+    public function isSent(): ?bool
+    {
+        return $this->sent;
+    }
+
+    public function setSent(bool $sent): static
+    {
+        $this->sent = $sent;
 
         return $this;
     }
