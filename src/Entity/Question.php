@@ -222,12 +222,11 @@ class Question
         return $this;
     }
 
-    public function getReponseRate(): float
+    public function getNbOfResponses(): float
     {
         if (!$this->isSent()){
             return 0;
         }
-        $total_of_possible_answers = count($this->getAnswers());
         $answers_with_choices = 0;
         foreach( $this->getAnswers() as $answer){
             if (count($answer->getChoices()) > 0)
@@ -235,7 +234,17 @@ class Question
                 $answers_with_choices++;
             }
         }
-        return $answers_with_choices / $total_of_possible_answers;
+        return $answers_with_choices;
+    }
+
+    public function getResponseRate(): float
+    {
+        if (!$this->isSent()){
+            return 0;
+        }
+        $total_of_possible_answers = count($this->getAnswers());
+    
+        return $this->getNbOfResponses() / $total_of_possible_answers;
     }
 
 }

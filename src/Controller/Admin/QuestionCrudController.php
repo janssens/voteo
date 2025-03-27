@@ -58,7 +58,7 @@ class QuestionCrudController extends AbstractCrudController
             BooleanField::new('is_multichoices','Plusieurs réponses possibles'),
             TextEditorField::new('outro','Texte après question'),
             AssociationField::new('lists',label: 'Liste(s) concernée(s)'),
-            PercentField::new('reponseRate',label: 'Réponses'),
+            PercentField::new('responseRate',label: 'Réponses'),
         ];
     }
 

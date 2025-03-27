@@ -21,7 +21,8 @@
         "symfony/runtime": "7.2.*",
         "symfony/security-bundle": "7.2.*",
         "symfony/yaml": "7.2.*",
-        "symfonycasts/verify-email-bundle": "^1.17"
+        "symfonycasts/verify-email-bundle": "^1.17",
+        "twig/intl-extra": "^3.20"
     },
     "config": {
         "allow-plugins": {
