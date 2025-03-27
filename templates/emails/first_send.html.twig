@@ -5,8 +5,8 @@
 <table>
     <tr>
         {% for choice in choices %}
-            <td style="padding: 1rem"><a style="display:block; background: {{ choice.color ? choice.color : "#000" }}; text-decoration: none; margin: 10px; border: 1px solid #0e4e36;border-radius: 5px; color: black; padding: 1rem;"
-                                         href="">{{ choice.Label }}</a></td>
+            <td style="padding: 10px"><a style="display:block; background: {{ choice.color ? choice.color : "#000" }}; text-decoration: none; margin: 10px; border: 1px solid #0e4e36;border-radius: 5px; color: black; padding: 10px;"
+                                         href="{{ url('answer_by_link', { 'a_token' : answer.token , 'b64_choices_list' : choice.id | base64_encode } ) }}">{{ choice.Label }}</a></td>
         {% endfor %}
     </tr>
 </table>

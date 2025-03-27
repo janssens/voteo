@@ -30,21 +30,26 @@ class QuestionEmailer
     }
 
 
-    protected function sendQuestionEmail(Question $question){
+    protected function sendQuestionEmail(Question $question, bool $force = false){
         $choices = $this->em->getRepository(Choice::class)->findBy(['question'=> $question]);
         $answers = $this->em->getRepository(Answer::class)->findBy(['question' => $question]);
 
         $recipients = [];
         foreach( $question->getLists() as $contactList) {
             foreach( $contactList->getContacts() as $contact) {
-                $recipients[] = $contact;
+                $recipients[$contact->getId()] = $contact;
             }
         }
 
         $sortedReplies = [];
         /** @var Answer $answer */
-        foreach ($answers as $answer){
-            $sortedReplies[$answer->getContact()->getId()] = $answer;
+        foreach ($answers as $answer) {
+            $contact_id = $answer->getContact()->getId();
+            $sortedReplies[$contact_id] = $answer;
+            //do not resent mail if reply exist, exept force
+            if ( !$force && count($answer->getChoices()) >= 1 ) {
+                unset($recipients[$contact_id]);
+            }
         }
         /** @var Contact $recipient */
         foreach ($recipients as $recipient) {
@@ -96,7 +101,7 @@ class QuestionEmailer
         $question = $event->getQuestion();
 
         if ($question->isSent()){
-            $this->sendQuestionEmail($question);
+            $this->sendQuestionEmail($question, false);
             $question->setSent(true);
             $this->em->flush();
         }

@@ -15,6 +15,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\HiddenField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\PercentField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextEditorField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
@@ -56,7 +57,8 @@ class QuestionCrudController extends AbstractCrudController
             CollectionField::new('choices','Choix')->useEntryCrudForm(ChoiceCrudController::class),
             BooleanField::new('is_multichoices','Plusieurs réponses possibles'),
             TextEditorField::new('outro','Texte après question'),
-            AssociationField::new('lists',label: 'Liste(s) concernée(s)')
+            AssociationField::new('lists',label: 'Liste(s) concernée(s)'),
+            PercentField::new('reponseRate',label: 'Réponses'),
         ];
     }
 
@@ -69,9 +71,9 @@ class QuestionCrudController extends AbstractCrudController
         ->displayAsButton()
         ->linkToCrudAction('sendQuestion');
 
-        $resendQuestion = Action::new('resendQuestion', 'Relancer', 'fa fa-send')
+        $resendQuestion = Action::new('resendQuestion', 'Relancer les sans réponse', 'fa fa-send')
         ->displayIf(static function (Question $entity) {
-            return $entity->isSent();
+            return $entity->isSent() && $entity->getReponseRate() < 1;
         })
         ->displayAsButton()
         ->linkToCrudAction('resendQuestion');

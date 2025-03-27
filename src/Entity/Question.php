@@ -221,4 +221,21 @@ class Question
 
         return $this;
     }
+
+    public function getReponseRate(): float
+    {
+        if (!$this->isSent()){
+            return 0;
+        }
+        $total_of_possible_answers = count($this->getAnswers());
+        $answers_with_choices = 0;
+        foreach( $this->getAnswers() as $answer){
+            if (count($answer->getChoices()) > 0)
+            {
+                $answers_with_choices++;
+            }
+        }
+        return $answers_with_choices / $total_of_possible_answers;
+    }
+
 }

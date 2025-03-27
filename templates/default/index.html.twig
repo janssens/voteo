@@ -1,0 +1,10 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}titre{% endblock %}
+
+{% block body %}
+<div class="wrapper">
+    <a href="{{ path('login') }}">connexion</a> |
+    <a href="{{ path('app_register') }}">enregistrement</a>
+</div>
+{% endblock %}

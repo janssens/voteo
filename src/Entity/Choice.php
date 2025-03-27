@@ -22,18 +22,19 @@ class Choice
     #[ORM\Column(length: 255)]
     private ?string $label = null;
 
+    #[ORM\Column(length: 15, nullable: true)]
+    private ?string $color = null;
+
     /**
      * @var Collection<int, Answer>
      */
-    #[ORM\OneToMany(targetEntity: Answer::class, mappedBy: 'choice', orphanRemoval: true)]
+    #[ORM\ManyToMany(targetEntity: Answer::class, mappedBy: 'choices')]
     private Collection $answers;
-
-    #[ORM\Column(length: 15, nullable: true)]
-    private ?string $color = null;
 
     public function __construct()
     {
         $this->answers = new ArrayCollection();
+        $this->answerss = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -65,36 +66,6 @@ class Choice
         return $this;
     }
 
-    /**
-     * @return Collection<int, Answer>
-     */
-    public function getAnswers(): Collection
-    {
-        return $this->answers;
-    }
-
-    public function addAnswer(Answer $answer): static
-    {
-        if (!$this->answers->contains($answer)) {
-            $this->answers->add($answer);
-            $answer->setChoice($this);
-        }
-
-        return $this;
-    }
-
-    public function removeAnswer(Answer $answer): static
-    {
-        if ($this->answers->removeElement($answer)) {
-            // set the owning side to null (unless already changed)
-            if ($answer->getChoice() === $this) {
-                $answer->setChoice(null);
-            }
-        }
-
-        return $this;
-    }
-
     public function getColor(): ?string
     {
         return $this->color;
@@ -110,5 +81,32 @@ class Choice
     public function __toString()
     {
         return $this->getLabel();
+    }
+
+    /**
+     * @return Collection<int, Answer>
+     */
+    public function getAnswers(): Collection
+    {
+        return $this->answers;
+    }
+
+    public function addAnswer(Answer $answer): static
+    {
+        if (!$this->answers->contains($answer)) {
+            $this->answers->add($answer);
+            $answer->addChoice($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAnswer(Answer $answer): static
+    {
+        if ($this->answers->removeElement($answer)) {
+            $answer->removeChoice($this);
+        }
+
+        return $this;
     }
 }

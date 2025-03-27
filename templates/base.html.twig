@@ -8,8 +8,39 @@
 
         {% block javascripts %}
         {% endblock %}
+
+        <style>
+            a{
+                color: blue;
+                text-decoration: underline;
+                cursor: pointer;
+            }
+            .messages {
+                text-align: center;
+                background: white
+            }
+            .messages > div {
+                margin: 2rem;
+                font-size: 20px;
+                font-weight: bold;
+            }
+            .messages .success { color: #10ac84;}
+            .messages .error { color: #ee5253;}
+            .messages .notice { color: #5f27cd;}
+        </style>
     </head>
     <body>
+        <div class="messages wrapper">
+            {% for success in app.flashes('success') %}
+                <div class="success">{{ success }}</div>
+            {% endfor %}
+            {% for error in app.flashes('error') %}
+                <div class="error">{{ error }}</div>
+            {% endfor %}
+            {% for notice in app.flashes('notice') %}
+                <div class="notice">{{ notice }}</div>
+            {% endfor %}
+        </div>
         {% block body %}{% endblock %}
     </body>
 </html>
