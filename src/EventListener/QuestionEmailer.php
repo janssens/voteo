@@ -62,13 +62,14 @@ class QuestionEmailer
             }
         }
         $this->em->flush();
+        /** @var Contact $recipient */
         foreach ($recipients as $recipient) {
             $email = (new TemplatedEmail())
                 ->from(new Address($this->params->get('app.transactional_mail_sender'), $this->params->get('app.transactional_mail_sender_friendlyname')))
-                ->to(new Address($recipient->getEmail(), $recipient->getName()))
+                ->to(new Address($recipient->getEmail(), $recipient->getFullName()))
                 //->cc('cc@example.com')
                 //->bcc('bcc@example.com')
-                //->replyTo('fabien@example.com')
+                ->replyTo($question->getOwner()->getEmail())
                 ->subject($question->getSubject())
                 ->htmlTemplate('emails/first_send.html.twig')
                 ->context([

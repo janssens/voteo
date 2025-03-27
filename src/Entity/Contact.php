@@ -127,6 +127,11 @@ class Contact
         return $this;
     }
 
+    public function getFullName(): string
+    {
+        return $this->getFirstname().' '.$this->getLastname();
+    }
+
     public function __tostring(): string
     {
         return $this->getFirstname().' '.$this->getLastname().' <'.$this->getEmail().'>';
