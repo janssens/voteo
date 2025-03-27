@@ -73,7 +73,7 @@ class QuestionCrudController extends AbstractCrudController
 
         $resendQuestion = Action::new('resendQuestion', 'Relancer les sans réponse', 'fa fa-send')
         ->displayIf(static function (Question $entity) {
-            return $entity->isSent() && $entity->getReponseRate() < 1;
+            return $entity->isSent() && $entity->getResponseRate() < 1;
         })
         ->displayAsButton()
         ->linkToCrudAction('resendQuestion');
