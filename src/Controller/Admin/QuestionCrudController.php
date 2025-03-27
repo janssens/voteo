@@ -17,15 +17,20 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\HiddenField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextEditorField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
+use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 class QuestionCrudController extends AbstractCrudController
 {
     private $eventDispatcher;
+    private $adminUrlGenerator;
+    private $entityManager;
 
-    public function __construct(EventDispatcherInterface $eventDispatcher)
+    public function __construct(EntityManagerInterface $entityManager,EventDispatcherInterface $eventDispatcher,AdminUrlGenerator $adminUrlGenerator)
     {
+        $this->entityManager = $entityManager;
         $this->eventDispatcher = $eventDispatcher;
+        $this->adminUrlGenerator = $adminUrlGenerator;
     }
     
     public static function getEntityFqcn(): string
@@ -63,10 +68,23 @@ class QuestionCrudController extends AbstractCrudController
         })
         ->displayAsButton()
         ->linkToCrudAction('sendQuestion');
+
+        $resendQuestion = Action::new('resendQuestion', 'Relancer', 'fa fa-send')
+        ->displayIf(static function (Question $entity) {
+            return $entity->isSent();
+        })
+        ->displayAsButton()
+        ->linkToCrudAction('resendQuestion');
+
+        $duplicate = Action::new('duplicateQuestion', 'Duplicate', 'fa fa-copy')
+        ->displayAsButton()
+        ->linkToCrudAction('duplicateQuestion');
         
         return $actions
             ->add(Crud::PAGE_INDEX, Action::DETAIL)
-            ->add(Crud::PAGE_INDEX, $sendQuestion);
+            ->add(Crud::PAGE_INDEX, $duplicate)
+            ->add(Crud::PAGE_INDEX, $sendQuestion)
+            ->add(Crud::PAGE_INDEX, $resendQuestion);
     }
     
     public function sendQuestion(AdminContext $context)
@@ -75,7 +93,58 @@ class QuestionCrudController extends AbstractCrudController
         $event = new SendQuestionEvent($question);
         $this->eventDispatcher->dispatch($event, SendQuestionEvent::NAME);
 
-        return $this->redirect($context->getReferrer());
+        $url = $this->adminUrlGenerator
+            ->setController(QuestionCrudController::class)
+            ->setAction(Action::INDEX)
+            // ->setEntityId($question->getId())
+            ->generateUrl();
+    
+        return $this->redirect($url);
+    }
+
+    public function resendQuestion(AdminContext $context)
+    {
+        $question = $context->getEntity()->getInstance();
+        $event = new SendQuestionEvent($question);
+        $this->eventDispatcher->dispatch($event, SendQuestionEvent::NAME_SEND_AGAIN);
+
+        $url = $this->adminUrlGenerator
+            ->setController(QuestionCrudController::class)
+            ->setAction(Action::INDEX)
+            // ->setEntityId($question->getId())
+            ->generateUrl();
+    
+        return $this->redirect($url);
+    }
+
+    public function duplicateQuestion(AdminContext $context)
+    {
+        /** @var Question $question */
+        $question = $context->getEntity()->getInstance();
+    
+        $clone = clone $question;
+
+        // Custom logic for the clone, for example:
+        $clone->setSubject('[clone] '.$question->getSubject());
+        $clone->setSent(false);
+
+        foreach ($question->getChoices() as $choice)
+        {
+            $cloned_choice = clone $choice;
+            $clone->addChoice($cloned_choice);
+        }
+    
+        // Persist the cloned entity
+        $this->entityManager->persist($clone);
+        $this->entityManager->flush();
+        
+        $url = $this->adminUrlGenerator
+            ->setController(QuestionCrudController::class)
+            ->setAction(Action::INDEX)
+            // ->setEntityId($clone->getId())
+            ->generateUrl();
+    
+        return $this->redirect($url);
     }
 
 

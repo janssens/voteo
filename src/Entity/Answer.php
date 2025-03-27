@@ -21,6 +21,10 @@ class Answer
     #[ORM\JoinColumn(nullable: false)]
     private ?Choice $choice = null;
 
+    #[ORM\ManyToOne(inversedBy: 'answers')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Question $question = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -46,6 +50,18 @@ class Answer
     public function setChoice(?Choice $choice): static
     {
         $this->choice = $choice;
+
+        return $this;
+    }
+
+    public function getQuestion(): ?Question
+    {
+        return $this->question;
+    }
+
+    public function setQuestion(?Question $question): static
+    {
+        $this->question = $question;
 
         return $this;
     }

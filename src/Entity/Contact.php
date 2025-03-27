@@ -68,6 +68,11 @@ class Contact
         return $this;
     }
 
+    public function getName(): ?string
+    {
+        return $this->firstname.' '.$this->lastname;
+    }
+
     public function getEmail(): ?string
     {
         return $this->email;
