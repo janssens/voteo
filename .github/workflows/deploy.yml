@@ -1,8 +1,9 @@
 name: Deploy o2switch (FTP)
 
 on:
-  push:
-    branches: [main]
+  # Déploiement auto suspendu : décommenter pour redéployer à chaque push sur main
+  # push:
+  #   branches: [main]
   workflow_dispatch:
     inputs:
       full:
@@ -59,7 +60,7 @@ jobs:
       - name: Warn if composer.lock changed
         if: github.event_name == 'push'
         run: |
-          BEFORE="${{ github.event.before }}"
+          BEFORE=$(jq -r '.before // empty' "$GITHUB_EVENT_PATH")
           if [ "$BEFORE" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$BEFORE" 2>/dev/null \
              || ! git diff --quiet "$BEFORE" HEAD -- composer.json composer.lock; then
             echo "::warning title=composer::composer.lock a changé : lancer 'composer install --no-dev --optimize-autoloader' sur le serveur"

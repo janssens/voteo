@@ -72,7 +72,9 @@ Chaque question n'est envoyée qu'une seule fois. `--dry-run` liste les question
 
 ## Mise en ligne (o2switch)
 
-La production est hébergée sur un mutualisé o2switch (Apache + PHP). Chaque push sur `main` déclenche le workflow [deploy.yml](.github/workflows/deploy.yml), qui envoie le code par FTPS avec `lftp`.
+La production est hébergée sur un mutualisé o2switch (Apache + PHP). Le workflow [deploy.yml](.github/workflows/deploy.yml) envoie le code par FTPS avec `lftp`.
+
+Le déploiement automatique à chaque push sur `main` est **suspendu** : lancez le workflow à la main depuis l'onglet **Actions** → *Deploy o2switch (FTP)* → **Run workflow**. Pour le réactiver, décommentez le bloc `push` en tête du workflow.
 
 ### Ce que fait le workflow
 
@@ -129,9 +131,9 @@ php bin/console doctrine:migrations:migrate --no-interaction
 
 ### À chaque mise en ligne
 
-Le push sur `main` suffit dans la plupart des cas. Deux actions restent manuelles, depuis le terminal cPanel :
+Lancer le workflow suffit dans la plupart des cas. Deux actions restent manuelles, depuis le terminal cPanel :
 
-- **`composer.json` ou `composer.lock` a changé** (le workflow affiche alors un avertissement) :
+- **`composer.json` ou `composer.lock` a changé** (lors d'un déploiement automatique, le workflow affiche alors un avertissement) :
 
   ```bash
   cd ~/voteo && composer install --no-dev --optimize-autoloader
