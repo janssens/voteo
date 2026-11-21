@@ -29,6 +29,25 @@ class Question
     #[ORM\Column]
     private bool $is_multichoices = false;
 
+    #[ORM\Column(options: ['default' => false])]
+    private bool $resultsVisibleBeforeVote = false;
+
+    /** Réponses anonymes : les participants ne voient pas qui a voté quoi (l'organisateur, si). */
+    #[ORM\Column(options: ['default' => false])]
+    private bool $anonymous = false;
+
+    /** Au-delà de cette date, on ne peut plus répondre ni modifier sa réponse. */
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $closesAt = null;
+
+    /** Envoyer automatiquement les résultats à tous les destinataires une fois la date de clôture passée (commande app:send-results). */
+    #[ORM\Column(options: ['default' => false])]
+    private bool $sendResultsOnClose = false;
+
+    /** Date d'envoi automatique des résultats (null = pas encore envoyés). */
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $resultsSentAt = null;
+
     /**
      * @var Collection<int, Choice>
      */
@@ -105,6 +124,71 @@ class Question
     public function isMultichoices(): ?bool
     {
         return $this->is_multichoices;
+    }
+
+    public function getClosesAt(): ?\DateTimeImmutable
+    {
+        return $this->closesAt;
+    }
+
+    public function setClosesAt(?\DateTimeImmutable $closesAt): static
+    {
+        $this->closesAt = $closesAt;
+
+        return $this;
+    }
+
+    public function isClosed(?\DateTimeImmutable $now = null): bool
+    {
+        return null !== $this->closesAt && $this->closesAt <= ($now ?? new \DateTimeImmutable());
+    }
+
+    public function isSendResultsOnClose(): bool
+    {
+        return $this->sendResultsOnClose;
+    }
+
+    public function setSendResultsOnClose(bool $sendResultsOnClose): static
+    {
+        $this->sendResultsOnClose = $sendResultsOnClose;
+
+        return $this;
+    }
+
+    public function getResultsSentAt(): ?\DateTimeImmutable
+    {
+        return $this->resultsSentAt;
+    }
+
+    public function setResultsSentAt(?\DateTimeImmutable $resultsSentAt): static
+    {
+        $this->resultsSentAt = $resultsSentAt;
+
+        return $this;
+    }
+
+    public function isAnonymous(): bool
+    {
+        return $this->anonymous;
+    }
+
+    public function setAnonymous(bool $anonymous): static
+    {
+        $this->anonymous = $anonymous;
+
+        return $this;
+    }
+
+    public function isResultsVisibleBeforeVote(): bool
+    {
+        return $this->resultsVisibleBeforeVote;
+    }
+
+    public function setResultsVisibleBeforeVote(bool $resultsVisibleBeforeVote): static
+    {
+        $this->resultsVisibleBeforeVote = $resultsVisibleBeforeVote;
+
+        return $this;
     }
 
     public function setIsMultichoices(bool $is_multichoices): static

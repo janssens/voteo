@@ -9,40 +9,34 @@
         <header class="text-center">
             <div class="icon-bubble mint" style="margin: 0 auto 1rem;">{{ icon.check }}</div>
             <h1 class="h2">Merci {{ contact.firstname }} !</h1>
-            <p class="muted">Votre réponse à « {{ question.subject }} » a bien été prise en compte.</p>
-            <p class="stat">
-                <span>{{ question.nbOfResponses }} réponse{{ question.nbOfResponses > 1 ? 's' }} reçue{{ question.nbOfResponses > 1 ? 's' }}</span>
-                <span>Participation : {{ question.responseRate|format_number(style: 'percent') }}</span>
-            </p>
-        </header>
-
-        {% set total = question.nbOfResponses %}
-        {% set my_choice_ids = answer.choices.toArray|map(c => c.id) %}
-        <div class="results">
-            {% for choice in question.choices %}
-                {% set count = choice.answers|length %}
-                {% set percent = total > 0 ? (count / total * 100)|round : 0 %}
-                {% set mine = choice.id in my_choice_ids %}
-                <div class="result">
-                    <div class="result-head">
-                        <span>{{ choice.label }}{% if mine %} <span class="muted">· votre choix</span>{% endif %}</span>
-                        <span class="count">{{ count }} · {{ percent }} %</span>
-                    </div>
-                    <div class="result-bar" role="img" aria-label="{{ percent }} % des réponses">
-                        <span style="width: {{ percent }}%;{% if choice.color %} background: {{ choice.color }};{% endif %}"></span>
-                    </div>
-                    {% if choice.answers is not empty %}
-                        <ul class="result-names">
-                            {% for a in choice.answers %}
-                                <li>{{ a.contact.firstname }}</li>
-                            {% endfor %}
-                        </ul>
+            {% if already_answered|default(false) %}
+                <div class="alert alert-notice answer-notice">
+                    <span>Vous avez déjà répondu à cette question.</span>
+                    {% if not question.closed %}
+                        <a class="btn btn-sm btn-soft" href="{{ path('answer_form', {a_token: answer.token}) }}">Modifier ma réponse</a>
                     {% endif %}
                 </div>
-            {% endfor %}
-        </div>
+            {% else %}
+                <p class="muted">Votre réponse à « {{ question.subject|personalize(contact, false) }} » a bien été prise en compte.</p>
+            {% endif %}
+        </header>
 
-        <p class="muted text-center" style="margin: 1.5rem 0 0;">Vous pouvez fermer cette page.</p>
+        {% include 'partials/_results.html.twig' %}
+
+        <div class="close-page text-center">
+            <p class="muted">Vous pouvez fermer cette page.</p>
+            <button type="button" class="btn btn-soft" data-close-page>Fermer cette page</button>
+            <p class="muted close-fallback" hidden>Votre navigateur ne permet pas de fermer cet onglet automatiquement. Vous pouvez le fermer vous-même.</p>
+        </div>
+        <script>
+            document.querySelector('[data-close-page]').addEventListener('click', function () {
+                window.close();
+                // Les navigateurs refusent window.close() sur un onglet qu'ils n'ont pas ouvert par script.
+                setTimeout(function () {
+                    document.querySelector('.close-fallback').hidden = false;
+                }, 300);
+            });
+        </script>
     </section>
 </div>
 {% endblock %}

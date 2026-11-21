@@ -1,6 +1,9 @@
 twig:
     file_name_pattern: '*.twig'
     form_themes: ['form/voteo_theme.html.twig']
+    # Dates stockées en UTC, affichées à l'heure française
+    date:
+        timezone: Europe/Paris
 
 when@test:
     twig:

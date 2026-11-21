@@ -3,9 +3,16 @@
 namespace App\Controller\Admin;
 
 use App\Entity\Question;
+use App\Controller\Admin\Concern\OwnedByUserTrait;
+use App\Entity\Answer;
 use App\Event\SendQuestionEvent;
+use App\Mail\Personalizer;
+use App\Security\Voter\OwnerVoter;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\EntityManagerInterface;
+use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminRoute;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Assets;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
@@ -13,6 +20,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\HiddenField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\PercentField;
@@ -20,9 +28,12 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\TextEditorField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\HttpFoundation\Response;
 
 class QuestionCrudController extends AbstractCrudController
 {
+    use OwnedByUserTrait;
+
     private $eventDispatcher;
     private $adminUrlGenerator;
     private $entityManager;
@@ -39,6 +50,23 @@ class QuestionCrudController extends AbstractCrudController
         return Question::class;
     }
 
+    protected static function ownerPath(): array
+    {
+        return ['entity.owner', []];
+    }
+
+    /**
+     * Question gérée par l'action personnalisée en cours, après contrôle du propriétaire.
+     * (EasyAdmin n'applique pas l'entity permission aux actions personnalisées.)
+     */
+    private function getOwnedQuestion(AdminContext $context): Question
+    {
+        $question = $context->getEntity()->getInstance();
+        $this->denyAccessUnlessGranted(OwnerVoter::OWNER, $question);
+
+        return $question;
+    }
+
 
     public function createEntity(string $entityFqcn): Question
     {
@@ -47,18 +75,60 @@ class QuestionCrudController extends AbstractCrudController
 
         return $question;
     }
+    public function configureCrud(Crud $crud): Crud
+    {
+        return $crud
+            // Form + live email preview side by side
+            ->overrideTemplate('crud/edit', 'admin/question/edit.html.twig')
+            ->overrideTemplate('crud/new', 'admin/question/new.html.twig')
+            ->renderContentMaximized();
+    }
+
+    public function configureAssets(Assets $assets): Assets
+    {
+        return $assets
+            // Theme picker of the embedded choice forms
+            ->addJsFile('js/admin-choice-theme.js')
+            ->addJsFile('js/admin-email-preview.js')
+            ->addJsFile('js/admin-question-form.js');
+    }
+
     public function configureFields(string $pageName): iterable
     {
         return [
             IdField::new('id')->hideOnForm(),
             BooleanField::new('sent')->hideOnForm(),
-            TextField::new('subject','Sujet'),
-            TextEditorField::new('intro','Texte avant question'),
+            TextField::new('subject','Sujet')->setHelp(Personalizer::VARIABLES_HELP),
+            TextEditorField::new('intro','Texte avant question')->setHelp(Personalizer::VARIABLES_HELP),
             CollectionField::new('choices','Choix')->useEntryCrudForm(ChoiceCrudController::class),
             BooleanField::new('is_multichoices','Plusieurs réponses possibles'),
-            TextEditorField::new('outro','Texte après question'),
-            AssociationField::new('lists',label: 'Liste(s) concernée(s)'),
-            PercentField::new('responseRate',label: 'Réponses'),
+            BooleanField::new('anonymous', 'Réponses anonymes')
+                ->onlyOnForms()
+                ->setHelp('Les participants voient les résultats sans les prénoms des votants (dans les pages de résultats et le mail de résultats). Vous, vous les voyez toujours.'),
+            BooleanField::new('resultsVisibleBeforeVote', 'Résultats visibles avant participation')
+                ->setHelp('Le mail contiendra un lien pour consulter les résultats actuels avant de voter.'),
+            DateTimeField::new('closesAt', 'Date de clôture')
+                // setTimezone() ne concerne que l'affichage : le formulaire a besoin de ses propres fuseaux
+                ->setTimezone('Europe/Paris')
+                ->setRequired(false)
+                ->setFormTypeOptions([
+                    'input' => 'datetime_immutable',
+                    'model_timezone' => 'UTC',
+                    'view_timezone' => 'Europe/Paris',
+                ])
+                ->setHelp('Facultatif. Heure de Paris. Au-delà, on ne peut plus répondre ni modifier sa réponse.'),
+            BooleanField::new('sendResultsOnClose', 'Envoyer les résultats à la clôture')
+                ->onlyOnForms()
+                // Affiché uniquement si une date de clôture est saisie (public/js/admin-email-preview.js)
+                ->addCssClass('js-send-results-on-close')
+                ->setHelp('Une fois la date de clôture passée, tous les destinataires reçoivent les résultats par email.'),
+            TextEditorField::new('outro','Texte après question')->setHelp(Personalizer::VARIABLES_HELP),
+            AssociationField::new('lists',label: 'Liste(s) concernée(s)')
+                // Uniquement les listes du propriétaire de la question (ou de l'utilisateur, à la création)
+                ->setQueryBuilder(fn (QueryBuilder $qb) => $qb
+                    ->andWhere('entity.owner = :list_owner')
+                    ->setParameter('list_owner', $this->getContext()?->getEntity()?->getInstance()?->getOwner() ?? $this->getUser())),
+            PercentField::new('responseRate',label: 'Réponses')->hideOnForm(),
         ];
     }
 
@@ -66,14 +136,14 @@ class QuestionCrudController extends AbstractCrudController
     {
         $sendQuestion = Action::new('sendQuestion', 'Envoyer', 'fa fa-send')
         ->displayIf(static function (Question $entity) {
-            return !$entity->isSent();
+            return !$entity->isSent() && !$entity->isClosed();
         })
         ->displayAsButton()
         ->linkToCrudAction('sendQuestion');
 
         $resendQuestion = Action::new('resendQuestion', 'Relancer les sans réponse', 'fa fa-send')
         ->displayIf(static function (Question $entity) {
-            return $entity->isSent() && $entity->getResponseRate() < 1;
+            return $entity->isSent() && !$entity->isClosed() && $entity->getResponseRate() < 1;
         })
         ->displayAsButton()
         ->linkToCrudAction('resendQuestion');
@@ -82,8 +152,14 @@ class QuestionCrudController extends AbstractCrudController
         ->displayAsButton()
         ->linkToCrudAction('duplicateQuestion');
         
+        $showResults = Action::new('showResults', 'Résultats', 'fa fa-chart-bar')
+            ->displayIf(static fn (Question $entity) => $entity->isSent())
+            ->linkToCrudAction('showResults');
+
         return $actions
             ->add(Crud::PAGE_INDEX, Action::DETAIL)
+            ->add(Crud::PAGE_INDEX, $showResults)
+            ->add(Crud::PAGE_DETAIL, $showResults)
             ->add(Crud::PAGE_INDEX, $duplicate)
             ->add(Crud::PAGE_INDEX, $sendQuestion)
             ->add(Crud::PAGE_INDEX, $resendQuestion);
@@ -91,7 +167,7 @@ class QuestionCrudController extends AbstractCrudController
     
     public function sendQuestion(AdminContext $context)
     {
-        $question = $context->getEntity()->getInstance();
+        $question = $this->getOwnedQuestion($context);
         $event = new SendQuestionEvent($question);
         $this->eventDispatcher->dispatch($event, SendQuestionEvent::NAME);
 
@@ -104,9 +180,55 @@ class QuestionCrudController extends AbstractCrudController
         return $this->redirect($url);
     }
 
+    #[AdminRoute(path: '/{entityId}/resultats', name: 'results')]
+    public function showResults(AdminContext $context): Response
+    {
+        $question = $this->getOwnedQuestion($context);
+
+        $total = $question->getNbOfResponses();
+        $results = [];
+        foreach ($question->getChoices() as $choice) {
+            $voters = $choice->getAnswers()
+                ->filter(static fn (Answer $a) => $a->getQuestion() === $question)
+                ->map(static fn (Answer $a) => $a->getContact())
+                ->toArray();
+            usort($voters, static fn ($a, $b) => strcasecmp((string) $a->getFullName(), (string) $b->getFullName()));
+            $results[] = [
+                'choice' => $choice,
+                'count' => \count($voters),
+                'percent' => $total > 0 ? round(\count($voters) / $total * 100) : 0,
+                'voters' => $voters,
+            ];
+        }
+
+        $pending = $question->getAnswers()
+            ->filter(static fn (Answer $a) => $a->getChoices()->isEmpty())
+            ->map(static fn (Answer $a) => $a->getContact())
+            ->toArray();
+        usort($pending, static fn ($a, $b) => strcasecmp((string) $a->getFullName(), (string) $b->getFullName()));
+
+        return $this->render('admin/question_results.html.twig', [
+            'question' => $question,
+            'results' => $results,
+            'total' => $total,
+            'recipients' => \count($question->getAnswers()),
+            'pending' => $pending,
+            'back_url' => $this->adminUrlGenerator
+                ->setController(self::class)
+                ->setAction(Action::INDEX)
+                ->unset('entityId')
+                ->generateUrl(),
+            'edit_url' => $this->adminUrlGenerator
+                ->setController(self::class)
+                ->setAction(Action::EDIT)
+                ->setEntityId($question->getId())
+                ->generateUrl(),
+        ]);
+    }
+
     public function resendQuestion(AdminContext $context)
     {
-        $question = $context->getEntity()->getInstance();
+        $question = $this->getOwnedQuestion($context);
         $event = new SendQuestionEvent($question);
         $this->eventDispatcher->dispatch($event, SendQuestionEvent::NAME_SEND_AGAIN);
 
@@ -121,14 +243,14 @@ class QuestionCrudController extends AbstractCrudController
 
     public function duplicateQuestion(AdminContext $context)
     {
-        /** @var Question $question */
-        $question = $context->getEntity()->getInstance();
-    
+        $question = $this->getOwnedQuestion($context);
+
         $clone = clone $question;
 
         // Custom logic for the clone, for example:
         $clone->setSubject('[clone] '.$question->getSubject());
         $clone->setSent(false);
+        $clone->setResultsSentAt(null);
 
         foreach ($question->getChoices() as $choice)
         {

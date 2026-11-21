@@ -1,0 +1,34 @@
+{# Right-hand live preview of the question email (see public/js/admin-email-preview.js) #}
+<aside class="vt-preview" data-preview-url="{{ path('admin_email_preview') }}" aria-label="Aperçu de l'email">
+    <div class="vt-preview-head">
+        <strong>Aperçu de l'email</strong>
+        <div class="btn-group btn-group-sm" role="group" aria-label="Largeur de l'aperçu">
+            <button type="button" class="btn btn-secondary active" data-preview-width="100%" aria-pressed="true"><i class="fa fa-desktop"></i></button>
+            <button type="button" class="btn btn-secondary" data-preview-width="375px" aria-pressed="false"><i class="fa fa-mobile-screen"></i></button>
+        </div>
+    </div>
+    <p class="vt-preview-meta">
+        <span>Objet&nbsp;: <span class="vt-preview-subject">—</span></span>
+        <span>Destinataire fictif&nbsp;: {{ constant('App\\Controller\\Admin\\EmailPreviewController::SAMPLE_CONTACT').firstname }} {{ constant('App\\Controller\\Admin\\EmailPreviewController::SAMPLE_CONTACT').lastname }}</span>
+    </p>
+    <div class="vt-preview-frame">
+        <iframe title="Aperçu de l'email" sandbox="allow-same-origin" referrerpolicy="no-referrer"></iframe>
+    </div>
+    <p class="vt-preview-note">Les liens sont désactivés dans l'aperçu. Les cases à cocher fonctionnent comme dans Apple Mail&nbsp;; Gmail et Outlook affichent le bouton «&nbsp;Répondre en ligne&nbsp;».</p>
+</aside>
+
+<style>
+    .vt-edit-layout { display: grid; gap: 1.5rem; grid-template-columns: minmax(0, 1fr); align-items: start; }
+    @media (min-width: 1200px) {
+        .vt-edit-layout { grid-template-columns: minmax(0, 1fr) minmax(360px, 42%); }
+        .vt-preview { position: sticky; top: 1rem; }
+    }
+    .vt-preview { border: 1px solid var(--border-color, #e4e0f5); border-radius: var(--border-radius, 8px); background: var(--white, #fff); padding: .75rem; }
+    .vt-preview-head { display: flex; justify-content: space-between; align-items: center; gap: .5rem; margin-bottom: .5rem; }
+    .vt-preview-meta { display: flex; flex-direction: column; gap: .15rem; font-size: .85rem; color: var(--text-muted, #6b6785); margin: 0 0 .5rem; }
+    .vt-preview-subject { color: var(--text-color, inherit); font-weight: 600; }
+    .vt-preview-frame { background: #f6f4ff; border-radius: 6px; padding: .5rem; display: flex; justify-content: center; }
+    .vt-preview-frame iframe { width: 100%; height: 420px; border: 0; border-radius: 4px; background: #fff; transition: width .2s ease, opacity .15s ease; }
+    .vt-preview.is-loading iframe { opacity: .6; }
+    .vt-preview-note { font-size: .78rem; color: var(--text-muted, #6b6785); margin: .5rem 0 0; }
+</style>

@@ -1,0 +1,71 @@
+{# templates/emails/results.html.twig
+   Final results sent automatically after the closing date (command app:send-results).
+   Context: question, answer (the recipient's answer), contact.
+#}
+{% set font = "Nunito, 'Segoe UI', system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial, sans-serif" %}
+{% set total = question.nbOfResponses %}
+{% set my_choice_ids = answer.choices.toArray|map(c => c.id) %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Résultats : {{ question.subject|personalize(contact, false) }}</title>
+</head>
+<body style="margin: 0; padding: 16px; font-family: {{ font }}; color: #2f2b45; font-size: 15px; line-height: 1.5;">
+
+<p style="margin: 0 0 12px;">Bonjour {{ contact.firstname }},</p>
+<p style="margin: 0 0 20px;">
+    La consultation «&nbsp;<strong>{{ question.subject|personalize(contact, false) }}</strong>&nbsp;» est close
+    {%- if question.closesAt %} depuis le {{ question.closesAt|format_datetime('long', 'short', locale: 'fr') }}{% endif %}.
+    Voici les résultats définitifs.
+</p>
+
+<p style="margin: 0 0 16px; color: #6b6785; font-size: 14px;">
+    {{ total }} réponse{{ total > 1 ? 's' }} reçue{{ total > 1 ? 's' }}
+    · participation {{ question.responseRate|format_number(style: 'percent') }}
+</p>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 560px; border-collapse: collapse;">
+    {% for choice in question.choices %}
+        {% set count = choice.answers|length %}
+        {% set percent = total > 0 ? (count / total * 100)|round : 0 %}
+        {% set mine = choice.id in my_choice_ids %}
+        {% set bar = choice.textColor ?: '#6c5ccf' %}
+        {% set track = choice.color ?: '#f3f2f7' %}
+        <tr>
+            <td style="padding: 10px 0 4px; font-weight: 700;">
+                {{ choice.label }}{% if mine %} <span style="font-weight: 400; color: #6b6785;">· votre choix</span>{% endif %}
+            </td>
+            <td align="right" style="padding: 10px 0 4px; white-space: nowrap; color: #6b6785;">{{ count }} · {{ percent }}&nbsp;%</td>
+        </tr>
+        <tr>
+            <td colspan="2" style="padding: 0;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse: separate; background: {{ track }}; border: 1px solid {{ choice.borderColor ?: '#e4e0f5' }}; border-radius: 999px;">
+                    <tr>
+                        {% if percent > 0 %}<td width="{{ percent }}%" height="10" style="height: 10px; line-height: 10px; font-size: 0; background: {{ bar }}; border-radius: 999px;">&nbsp;</td>{% endif %}
+                        {% if percent < 100 %}<td height="10" style="height: 10px; line-height: 10px; font-size: 0;">&nbsp;</td>{% endif %}
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        {% if choice.answers is not empty and not question.anonymous %}
+        <tr>
+            <td colspan="2" style="padding: 4px 0 0; font-size: 13px; color: #6b6785;">
+                {{ choice.answers|map(a => a.contact.firstname)|join(', ') }}
+            </td>
+        </tr>
+        {% endif %}
+    {% endfor %}
+</table>
+
+{% if my_choice_ids is empty %}
+<p style="margin: 24px 0 0; color: #6b6785;">Vous n'avez pas participé à cette consultation.</p>
+{% endif %}
+
+<p style="margin: 16px 0 0;">
+    <a href="{{ url('answer_form', { 'a_token' : answer.token }) }}" style="display:inline-block; padding:12px 22px; border-radius:999px; background:#6c5ccf; background-image:linear-gradient(135deg, #a597ee, #6c5ccf); color:#ffffff; font-weight:700; text-decoration:none;">Voir les résultats en ligne</a>
+</p>
+
+</body>
+</html>

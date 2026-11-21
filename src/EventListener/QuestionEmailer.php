@@ -8,6 +8,7 @@ use App\Entity\Contact;
 use App\Entity\ContactList;
 use App\Entity\Question;
 use App\Event\SendQuestionEvent;
+use App\Mail\Personalizer;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
@@ -70,12 +71,13 @@ class QuestionEmailer
                 //->cc('cc@example.com')
                 //->bcc('bcc@example.com')
                 ->replyTo($question->getOwner()->getEmail())
-                ->subject($question->getSubject())
+                ->subject(Personalizer::personalize($question->getSubject(), $recipient, false))
                 ->htmlTemplate('emails/first_send.html.twig')
                 ->context([
                     'question' => $question,
                     'answer' => $sortedReplies[$recipient->getId()],
                     'choices' => $choices,
+                    'contact' => $recipient,
                 ]);
             try {
                 $this->mailer->send($email);

@@ -1,0 +1,77 @@
+{% extends 'base.html.twig' %}
+{% import 'partials/_icons.html.twig' as icon %}
+
+{% block title %}{{ closed ? 'Consultation close' : (has_answered ? 'Modifier ma réponse' : 'Votre réponse') }}{% endblock %}
+
+{% block body %}
+{% set current_ids = answer.choices.toArray|map(c => c.id) %}
+{% set input_type = question.multichoices ? 'checkbox' : 'radio' %}
+<div class="container narrow">
+    <section class="card" aria-labelledby="form-title">
+        <header class="form-card-header">
+            <div class="icon-bubble sky">{{ icon.list }}</div>
+            <h1 id="form-title" class="h2">{{ question.subject|personalize(contact, false) }}</h1>
+            <p>
+                {% if closed %}
+                    Bonjour {{ contact.firstname }}, cette consultation est terminée.
+                {% elseif has_answered %}
+                    Bonjour {{ contact.firstname }}, vous avez déjà répondu. Vous pouvez modifier votre réponse ci-dessous.
+                {% else %}
+                    Bonjour {{ contact.firstname }}, quelle est votre réponse ?
+                {% endif %}
+            </p>
+        </header>
+
+        {% if error %}
+            <div class="alert alert-error" role="alert">{{ error }}</div>
+        {% endif %}
+
+        {% if closed %}
+            <div class="alert alert-notice closing-notice">
+                {{ icon.lock }}
+                <span>
+                    Consultation close depuis le {{ question.closesAt|format_datetime('long', 'short') }}.
+                    {{ has_answered ? 'Votre réponse a été prise en compte.' : 'Les réponses ne sont plus acceptées.' }}
+                </span>
+            </div>
+        {% else %}
+        {% if question.closesAt %}
+            <p class="closing-hint">Vous pouvez répondre ou modifier votre réponse jusqu'au <strong>{{ question.closesAt|format_datetime('long', 'short') }}</strong>.</p>
+        {% endif %}
+
+        <form method="post">
+            <fieldset class="choice-list">
+                <legend class="form-label">
+                    {{ question.multichoices ? 'Choisissez une ou plusieurs réponses' : 'Choisissez votre réponse' }}
+                </legend>
+                {% for choice in question.choices %}
+                    <label class="choice-option"{% if choice.color %} style="--choice-color: {{ choice.color }};"{% endif %}>
+                        <input type="{{ input_type }}" name="choices[]" value="{{ choice.id }}"
+                               {{ choice.id in current_ids ? 'checked' }}
+                               {{ input_type == 'radio' ? 'required' }}>
+                        <span>{{ choice.label }}</span>
+                    </label>
+                {% endfor %}
+            </fieldset>
+
+            <input type="hidden" name="_token" value="{{ csrf_token('answer_form_' ~ answer.token) }}">
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-lg btn-block">
+                    {{ has_answered ? 'Enregistrer ma nouvelle réponse' : 'Voter' }}
+                </button>
+            </div>
+        </form>
+        {% endif %}
+
+        <div class="results-section">
+            <h2 class="h3 text-center">{{ closed ? 'Résultats définitifs' : 'Résultats actuels' }}</h2>
+            {% if show_results %}
+                {% include 'partials/_results.html.twig' %}
+            {% else %}
+                <p class="muted text-center results-locked">{{ icon.lock }} Les résultats seront visibles après votre vote.</p>
+            {% endif %}
+        </div>
+    </section>
+</div>
+{% endblock %}

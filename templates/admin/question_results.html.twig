@@ -1,0 +1,106 @@
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{% block content_title %}Résultats · {{ question.subject }}{% endblock %}
+
+{% block page_actions %}
+    <a class="btn btn-secondary" href="{{ back_url }}"><i class="fa fa-arrow-left"></i> Retour aux questions</a>
+    <a class="btn btn-secondary" href="{{ edit_url }}"><i class="fa fa-pen"></i> Modifier la question</a>
+{% endblock %}
+
+{% block main %}
+    {# Chiffres clés #}
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card h-100"><div class="card-body">
+                <div class="text-muted small">Destinataires</div>
+                <div class="fs-3 fw-bold">{{ recipients }}</div>
+            </div></div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card h-100"><div class="card-body">
+                <div class="text-muted small">Réponses</div>
+                <div class="fs-3 fw-bold">{{ total }}</div>
+            </div></div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card h-100"><div class="card-body">
+                <div class="text-muted small">En attente</div>
+                <div class="fs-3 fw-bold">{{ pending|length }}</div>
+            </div></div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card h-100"><div class="card-body">
+                <div class="text-muted small">Participation</div>
+                <div class="fs-3 fw-bold">{{ question.responseRate|format_number(style: 'percent') }}</div>
+            </div></div>
+        </div>
+    </div>
+
+    {% if question.closesAt %}
+        <div class="alert {{ question.closed ? 'alert-secondary' : 'alert-info' }}">
+            <i class="fa {{ question.closed ? 'fa-lock' : 'fa-clock' }}"></i>
+            {{ question.closed ? 'Consultation close depuis le' : 'Clôture prévue le' }}
+            <strong>{{ question.closesAt|format_datetime('long', 'short') }}</strong>.
+        </div>
+    {% endif %}
+
+    <p class="text-muted">
+        {{ question.multichoices ? 'Plusieurs réponses possibles : la somme des pourcentages peut dépasser 100 %.' : 'Une seule réponse possible.' }}
+        Les pourcentages sont calculés sur le nombre de personnes ayant répondu.
+        {% if question.anonymous %}
+            <br><i class="fa fa-user-secret"></i> Réponses anonymes : vous seul voyez les noms ci-dessous, pas les participants.
+        {% endif %}
+    </p>
+
+    {# Détail par choix #}
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="h5 mb-3">Répartition des réponses</h2>
+            {% for row in results %}
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-baseline mb-1">
+                        <strong>{{ row.choice.label }}</strong>
+                        <span class="text-muted">{{ row.count }} · {{ row.percent }} %</span>
+                    </div>
+                    <div class="progress mb-2" role="img" aria-label="{{ row.percent }} % des réponses" style="height: 12px;">
+                        <div class="progress-bar" style="width: {{ row.percent }}%;{% if row.choice.color %} background-color: {{ row.choice.color }};{% endif %}"></div>
+                    </div>
+                    {% if row.voters is not empty %}
+                        <details>
+                            <summary class="text-muted small">Voir les {{ row.count }} personne{{ row.count > 1 ? 's' }}</summary>
+                            <table class="table table-sm mt-2 mb-0">
+                                <thead><tr><th>Nom</th><th>Email</th></tr></thead>
+                                <tbody>
+                                    {% for contact in row.voters %}
+                                        <tr><td>{{ contact.fullName }}</td><td><a href="mailto:{{ contact.email }}">{{ contact.email }}</a></td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </details>
+                    {% endif %}
+                </div>
+            {% else %}
+                <p class="text-muted mb-0">Cette question n'a aucun choix.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    {# Sans réponse #}
+    <div class="card">
+        <div class="card-body">
+            <h2 class="h5 mb-3">Sans réponse ({{ pending|length }})</h2>
+            {% if pending is empty %}
+                <p class="text-muted mb-0">Tout le monde a répondu. 🎉</p>
+            {% else %}
+                <table class="table table-sm mb-0">
+                    <thead><tr><th>Nom</th><th>Email</th></tr></thead>
+                    <tbody>
+                        {% for contact in pending %}
+                            <tr><td>{{ contact.fullName }}</td><td><a href="mailto:{{ contact.email }}">{{ contact.email }}</a></td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

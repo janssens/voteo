@@ -2,6 +2,7 @@
 
 namespace App\Controller\Admin;
 
+use App\Controller\Admin\Concern\OwnedByUserTrait;
 use App\Entity\Contact;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\EmailField;
@@ -11,9 +12,16 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 
 class ContactCrudController extends AbstractCrudController
 {
+    use OwnedByUserTrait;
+
     public static function getEntityFqcn(): string
     {
         return Contact::class;
+    }
+
+    protected static function ownerPath(): array
+    {
+        return ['owned_list.owner', ['owned_list' => 'entity.list']];
     }
 
     public function configureFields(string $pageName): iterable

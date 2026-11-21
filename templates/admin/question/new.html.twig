@@ -1,0 +1,8 @@
+{% extends '@EasyAdmin/crud/new.html.twig' %}
+
+{% block new_form %}
+    <div class="vt-edit-layout">
+        <div class="vt-edit-form">{{ parent() }}</div>
+        {{ include('admin/question/_email_preview.html.twig') }}
+    </div>
+{% endblock new_form %}

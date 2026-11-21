@@ -18,6 +18,10 @@ class ContactList
     #[ORM\Column(length: 255)]
     private ?string $name = null;
 
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    private ?User $owner = null;
+
     /**
      * @var Collection<int, Contact>
      */
@@ -39,6 +43,18 @@ class ContactList
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getOwner(): ?User
+    {
+        return $this->owner;
+    }
+
+    public function setOwner(?User $owner): static
+    {
+        $this->owner = $owner;
+
+        return $this;
     }
 
     public function getName(): ?string

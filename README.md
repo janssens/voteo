@@ -60,6 +60,16 @@ Créez un compte via **Créer un compte**, puis ajoutez vos contacts, vos listes
 
 Pour arrêter : `docker compose down --remove-orphans`.
 
+### Envoi automatique des résultats (cron)
+
+Quand l'option **Envoyer les résultats à la clôture** est cochée sur une question, les résultats sont envoyés par email à tous les destinataires une fois la date de clôture passée. L'envoi est fait par la commande `app:send-results`, à lancer régulièrement, par exemple toutes les 5 minutes depuis la crontab de l'hôte :
+
+```cron
+*/5 * * * * cd /chemin/vers/voteo && docker compose exec -T php bin/console app:send-results --no-interaction
+```
+
+Chaque question n'est envoyée qu'une seule fois. `--dry-run` liste les questions concernées sans rien envoyer.
+
 ## Structure du front
 
 | Élément | Emplacement |

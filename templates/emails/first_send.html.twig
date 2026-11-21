@@ -1,14 +1,142 @@
 {# templates/emails/first_send.html.twig #}
+{#
+    Choice buttons reuse the look of the home page email preview (.mail-choices chips):
+    rounded 10px, bold, light background, colored text and thin border, all configurable per choice.
 
-{{ question.Intro | raw }}
+    Multiple-choice questions use the CSS "checkbox hack" (no JS, no form):
+    - one hidden <input type="checkbox"> per choice, all siblings placed before .vt-body;
+    - each <label> toggles its checkbox and shows "[x]" or "[ ]" depending on :checked;
+    - one "Valider" link is rendered per combination (2^n), all hidden,
+      and a generated selector reveals the one matching the current state.
+    Clients without :checked support (Gmail, Outlook desktop...) get the fallback
+    link to the online answer page instead.
 
-<table>
-    <tr>
-        {% for choice in choices %}
-            <td style="padding: 10px"><a style="display:block; background: {{ choice.color ? choice.color : "#000" }}; text-decoration: none; margin: 10px; border: 1px solid #0e4e36;border-radius: 5px; color: black; padding: 10px;"
-                                         href="{{ url('answer_by_link', { 'a_token' : answer.token , 'b64_choices_list' : choice.id | base64_encode } ) }}">{{ choice.Label }}</a></td>
+    Context: question, choices, answer (token), contact (for {{ prenom }} / {{ nom }} variables),
+    preview (admin live preview: links are disabled). In preview mode, question, choices,
+    answer and contact are plain arrays, hence the lowercase keys below.
+#}
+{% set max_interactive_choices = 6 %}
+{% set nb_choices = choices|length %}
+{% set interactive = question.multichoices and nb_choices > 0 and nb_choices <= max_interactive_choices %}
+{% set p = 'vt' ~ question.id %}
+
+{% set font = "Nunito, 'Segoe UI', system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial, sans-serif" %}
+{% set default_bg = constant('App\\Entity\\Choice::DEFAULT_BACKGROUND') %}
+{% set default_text = constant('App\\Entity\\Choice::DEFAULT_TEXT_COLOR') %}
+{% set default_border = constant('App\\Entity\\Choice::DEFAULT_BORDER_COLOR') %}
+{% set chip_style = 'display:inline-block; margin:0 8px 8px 0; padding:8px 16px; border-radius:10px; font-family:' ~ font ~ '; font-size:15px; font-weight:700; line-height:1.3; text-decoration:none;' %}
+{# no "display" here: the Valider links are shown/hidden by the <style> rules #}
+{% set primary_look = 'padding:12px 22px; border-radius:999px; background:#6c5ccf; background-image:linear-gradient(135deg, #a597ee, #6c5ccf); color:#ffffff; font-family:' ~ font ~ '; font-size:15px; font-weight:700; line-height:1.2; text-decoration:none;' %}
+{% set primary_style = 'display:inline-block; ' ~ primary_look %}
+
+{% macro chip_colors(choice, default_bg, default_text, default_border) -%}
+    background:{{ choice.color ?: default_bg }}; color:{{ choice.textColor ?: default_text }}; border:1px solid {{ choice.borderColor ?: default_border }};
+{%- endmacro %}
+{% from _self import chip_colors %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ question.subject|personalize(contact ?? null, false) }}</title>
+    {% if interactive %}
+    <style>
+        .{{ p }}-cb { display: none !important; }
+        .{{ p }}-label { cursor: pointer; }
+        .{{ p }}-on { display: none; }
+        .{{ p }}-btn { display: none; }
+        .{{ p }}-btn-0 { display: inline-block; }
+
+        @media screen and (-webkit-min-device-pixel-ratio: 0) {
+            .{{ p }}-interactive { display: block !important; max-height: none !important; overflow: visible !important; }
+            .{{ p }}-fallback { display: none !important; }
+        }
+        {# Gmail strips <input>: keep the fallback there (Gmail inserts <u></u> before the body wrapper) #}
+        u + .{{ p }}-email .{{ p }}-interactive { display: none !important; }
+        u + .{{ p }}-email .{{ p }}-fallback { display: block !important; }
+
+        {# Checked state of each label: tick + border in the text color #}
+        {% for choice in choices -%}
+        .{{ p }}-c{{ loop.index0 }}:checked ~ .{{ p }}-body .{{ p }}-l{{ loop.index0 }} { border-color: currentColor !important; box-shadow: 0 0 0 2px currentColor; }
+        .{{ p }}-c{{ loop.index0 }}:checked ~ .{{ p }}-body .{{ p }}-l{{ loop.index0 }} .{{ p }}-on { display: inline; }
+        .{{ p }}-c{{ loop.index0 }}:checked ~ .{{ p }}-body .{{ p }}-l{{ loop.index0 }} .{{ p }}-off { display: none; }
         {% endfor %}
-    </tr>
-</table>
 
-{{ question.Outro | raw }}
+        {# One "Valider" button per non-empty combination #}
+        {% for mask in 1..(2 ** nb_choices - 1) -%}
+        {%- set selector = '' -%}
+        {%- for choice in choices -%}
+            {%- set selector = selector ~ '.' ~ p ~ '-c' ~ loop.index0 ~ ((mask b-and (2 ** loop.index0)) ? ':checked' : ':not(:checked)') ~ ' ~ ' -%}
+        {%- endfor %}
+        {{ selector }}.{{ p }}-body .{{ p }}-btn-{{ mask }} { display: inline-block; }
+        {{ selector }}.{{ p }}-body .{{ p }}-btn-0 { display: none; }
+        {% endfor %}
+    </style>
+    {% endif %}
+    {% if preview|default(false) %}
+    <style>a { pointer-events: none; cursor: default; } body { margin: 16px; }</style>
+    {% endif %}
+</head>
+<body class="{{ p }}-email">
+
+{{ question.intro|personalize(contact ?? null)|raw }}
+
+{% if not question.multichoices %}
+<div style="margin: 16px 0 8px;">
+    {%- for choice in choices %}
+    <a href="{{ url('answer_by_link', { 'a_token' : answer.token , 'b64_choices_list' : choice.id | base64_encode } ) }}"
+       style="{{ chip_style }} {{ chip_colors(choice, default_bg, default_text, default_border) }}">{{ choice.label }}</a>
+    {%- endfor %}
+</div>
+{% else %}
+    {% if interactive %}
+    <div class="{{ p }}-interactive" style="display:none; max-height:0; overflow:hidden; mso-hide:all;">
+        {% for choice in choices %}<input type="checkbox" id="{{ p }}-c{{ loop.index0 }}" class="{{ p }}-cb {{ p }}-c{{ loop.index0 }}" style="display:none;">{% endfor %}
+        <div class="{{ p }}-body">
+            <p style="margin: 16px 0 10px; font-family: {{ font }}; font-size: 14px; color: #6b6785;">Choisissez une ou plusieurs réponses&nbsp;:</p>
+            <div>
+                {%- for choice in choices %}
+                <label for="{{ p }}-c{{ loop.index0 }}" class="{{ p }}-label {{ p }}-l{{ loop.index0 }}"
+                       style="{{ chip_style }} {{ chip_colors(choice, default_bg, default_text, default_border) }}"><span style="font-family: monospace, monospace;"><span class="{{ p }}-off">[&nbsp;]</span><span class="{{ p }}-on">[x]</span></span>&nbsp;{{ choice.label }}</label>
+                {%- endfor %}
+            </div>
+            <p style="margin: 12px 0 16px;">
+                <span class="{{ p }}-btn {{ p }}-btn-0" style="padding: 12px 22px; border: 1px dashed #e4e0f5; border-radius: 999px; color: #6b6785; font-family: {{ font }}; font-size: 15px; font-weight: 700;">Cochez au moins une réponse</span>
+                {%- for mask in 1..(2 ** nb_choices - 1) -%}
+                    {%- set ids = [] -%}
+                    {%- for choice in choices -%}
+                        {%- if mask b-and (2 ** loop.index0) %}{% set ids = ids|merge([choice.id]) %}{%- endif -%}
+                    {%- endfor %}
+                <a class="{{ p }}-btn {{ p }}-btn-{{ mask }}" style="{{ primary_look }}"
+                   href="{{ url('answer_by_link', { 'a_token' : answer.token , 'b64_choices_list' : ids|join(',') | base64_encode } ) }}">Valider</a>
+                {%- endfor %}
+            </p>
+        </div>
+    </div>
+    {% endif %}
+    <div class="{{ p }}-fallback" style="margin: 16px 0;">
+        <p style="font-family: {{ font }};">Plusieurs réponses sont possibles pour cette question.</p>
+        <p><a href="{{ url('answer_form', { 'a_token' : answer.token }) }}" style="{{ primary_style }}">Répondre en ligne</a></p>
+    </div>
+{% endif %}
+
+{% if question.closesAt %}
+<p style="margin-top: 24px; font-size: 14px; color: #8a4b2a;">
+    Vous pouvez répondre ou modifier votre réponse jusqu'au <strong>{{ question.closesAt|format_datetime('long', 'short', locale: 'fr') }}</strong>.
+</p>
+{% endif %}
+
+{% if question.anonymous|default(false) %}
+<p style="margin-top: 16px; font-size: 14px; color: #6b6785;">Les réponses sont anonymes&nbsp;: les autres participants ne verront pas votre choix.</p>
+{% endif %}
+
+{% if question.resultsVisibleBeforeVote %}
+<p style="margin-top: 24px; font-size: 14px;">
+    <a href="{{ url('answer_form', { 'a_token' : answer.token }) }}" style="color: #6c5ccf;">Voir les résultats actuels avant de voter</a>
+</p>
+{% endif %}
+
+{{ question.outro|personalize(contact ?? null)|raw }}
+
+</body>
+</html>
