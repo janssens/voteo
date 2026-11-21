@@ -1,4 +1,5 @@
-{# Résultats d'une question. Variables : question, answer #}
+{# Résultats d'une question. Variables : question, answer
+   (prénoms des votants et des personnes en attente masqués si la question est anonyme) #}
 {% set total = question.nbOfResponses %}
 {% set my_choice_ids = answer.choices.toArray|map(c => c.id) %}
 
@@ -32,3 +33,18 @@
         </div>
     {% endfor %}
 </div>
+
+{# Before closing, and only if answers are not anonymous: who has not answered yet #}
+{% if not question.anonymous and not question.closed %}
+    {% set pending = question.answers|filter(a => a.choices is empty)|map(a => a.contact.firstname)|sort((x, y) => x|lower <=> y|lower) %}
+    {% if pending is not empty %}
+        <div class="results-pending">
+            <p class="results-pending-title">En attente de réponse ({{ pending|length }})</p>
+            <ul class="result-names">
+                {% for firstname in pending %}
+                    <li>{{ firstname }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+{% endif %}

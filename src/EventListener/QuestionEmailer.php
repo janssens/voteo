@@ -73,6 +73,7 @@ class QuestionEmailer
                 ->replyTo($question->getOwner()->getEmail())
                 ->subject(Personalizer::personalize($question->getSubject(), $recipient, false))
                 ->htmlTemplate('emails/first_send.html.twig')
+                ->textTemplate('emails/first_send.txt.twig')
                 ->context([
                     'question' => $question,
                     'answer' => $sortedReplies[$recipient->getId()],

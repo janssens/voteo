@@ -1,0 +1,33 @@
+{#- templates/emails/results.txt.twig
+    Plain text version of emails/results.html.twig (same context: question, answer, contact).
+    .txt templates are not auto-escaped.
+-#}
+{% set total = question.nbOfResponses %}
+{% set my_choice_ids = answer.choices.toArray|map(c => c.id) %}
+{% set bar_width = 20 %}
+Bonjour {{ contact.firstname }},
+
+La consultation « {{ question.subject|personalize(contact, false) }} » est close
+{%- if question.closesAt %} depuis le {{ question.closesAt|format_datetime('long', 'short', locale: 'fr') }}{% endif %}.
+Voici les résultats définitifs.
+
+{{ total }} réponse{{ total > 1 ? 's' }} reçue{{ total > 1 ? 's' }} - participation {{ question.responseRate|format_number(style: 'percent', locale: 'fr') }}
+{% for choice in question.choices %}
+{% set count = choice.answers|length %}
+{% set percent = total > 0 ? (count / total * 100)|round : 0 %}
+{% set filled = (percent * bar_width / 100)|round %}
+
+{{ choice.label }}{% if choice.id in my_choice_ids %}  <- votre choix{% endif %}
+
+[{{ '#'|repeat(filled) }}{{ '-'|repeat(bar_width - filled) }}] {{ percent }} % ({{ count }} vote{{ count > 1 ? 's' }})
+{% if choice.answers is not empty and not question.anonymous %}
+Votants : {{ choice.answers|map(a => a.contact.firstname)|join(', ') }}
+{% endif %}
+{% endfor %}
+
+{% if my_choice_ids is empty %}
+Vous n'avez pas participé à cette consultation.
+
+{% endif %}
+Voir les résultats en ligne :
+{{ url('answer_form', { 'a_token' : answer.token }) }}

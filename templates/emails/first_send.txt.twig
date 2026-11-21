@@ -1,0 +1,47 @@
+{#- templates/emails/first_send.txt.twig
+    Plain text version of emails/first_send.html.twig (same context: question, choices, answer, contact).
+    One direct link per choice for single-choice questions; multiple-choice questions are answered online.
+    .txt templates are not auto-escaped.
+-#}
+{% set answer_url = url('answer_form', { 'a_token' : answer.token }) %}
+{% set intro = question.intro|personalize(contact ?? null)|html_to_text %}
+{% set outro = question.outro|personalize(contact ?? null)|html_to_text %}
+{% if intro %}
+{{ intro }}
+
+{% endif %}
+{% if not question.multichoices %}
+Pour répondre, cliquez sur le lien de votre choix :
+{% for choice in choices %}
+
+* {{ choice.label }}
+  {{ url('answer_by_link', { 'a_token' : answer.token , 'b64_choices_list' : choice.id | base64_encode } ) }}
+{% endfor %}
+
+Vous pouvez aussi répondre en ligne :
+{{ answer_url }}
+{% else %}
+Plusieurs réponses sont possibles parmi :
+{% for choice in choices %}
+* {{ choice.label }}
+{% endfor %}
+
+Pour répondre, rendez-vous en ligne :
+{{ answer_url }}
+{% endif %}
+{% if question.closesAt %}
+
+Vous pouvez répondre ou modifier votre réponse jusqu'au {{ question.closesAt|format_datetime('long', 'short', locale: 'fr') }}.
+{% endif %}
+{% if question.anonymous|default(false) %}
+
+Les réponses sont anonymes : les autres participants ne verront pas votre choix.
+{% endif %}
+{% if question.resultsVisibleBeforeVote %}
+
+Les résultats actuels sont visibles sur la même page, avant même de voter.
+{% endif %}
+{% if outro %}
+
+{{ outro }}
+{% endif %}

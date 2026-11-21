@@ -719,6 +719,23 @@ a:hover {
     color: var(--text-muted);
 }
 
+.results-pending {
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px dashed var(--border);
+}
+
+.results-pending-title {
+    margin: 0;
+    font-weight: 700;
+    color: var(--text-muted);
+}
+
+.results-pending .result-names li {
+    background: transparent;
+    border: 1px dashed var(--border);
+}
+
 .stat {
     display: inline-flex;
     flex-wrap: wrap;

@@ -1,0 +1,97 @@
+name: Deploy o2switch (FTP)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-o2switch
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      APP_ENV: prod
+      APP_DEBUG: 0
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: ctype, iconv, intl, pdo_pgsql
+          tools: composer:v2
+          coverage: none
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+
+      - name: Install dependencies (prod)
+        run: composer install --no-dev --optimize-autoloader --classmap-authoritative --no-interaction --no-progress --no-scripts
+
+      - name: Build .env.local.php from secrets
+        env:
+          ENV_PROD: ${{ secrets.ENV_PROD }}
+        run: |
+          printf '%s\n' "$ENV_PROD" > .env.prod.local
+          composer dump-env prod
+          rm -f .env.prod.local
+
+      - name: Install bundle assets
+        run: php bin/console assets:install public --no-interaction
+
+      - name: Upload via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: ${{ secrets.FTP_SERVER_DIR }}
+          protocol: ftps
+          # "loose" accepte un certificat dont le nom ne correspond pas (ex: ftp.mondomaine.fr).
+          # Passer à "strict" si FTP_SERVER est le hostname du serveur o2switch.
+          security: loose
+          local-dir: ./
+          exclude: |
+            **/.git*
+            **/.git*/**
+            .github/**
+            var/**
+            docs/**
+            frankenphp/**
+            Dockerfile
+            .dockerignore
+            compose*.yaml
+            .devdbrc
+            .editorconfig
+            .env.dev
+            .env.*.local
+            README.md
+
+      - name: Clear remote Symfony cache
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_SERVER_DIR: ${{ secrets.FTP_SERVER_DIR }}
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+          OLD="prod_old_${GITHUB_RUN_ID}"
+          lftp -u "$FTP_USERNAME","$FTP_PASSWORD" "$FTP_SERVER" <<EOF
+          set ftp:ssl-force true
+          set ssl:verify-certificate no
+          cd ${FTP_SERVER_DIR%/}/var/cache || bye
+          mv prod $OLD || echo "pas de cache prod à vider"
+          rm -r $OLD || echo "rien à supprimer"
+          bye
+          EOF

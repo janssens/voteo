@@ -90,6 +90,7 @@ final class SendResultsCommand extends Command
                     ->replyTo($question->getOwner()->getEmail())
                     ->subject('Résultats : '.Personalizer::personalize($question->getSubject(), $contact, false))
                     ->htmlTemplate('emails/results.html.twig')
+                    ->textTemplate('emails/results.txt.twig')
                     ->context([
                         'question' => $question,
                         'answer' => $answer,
