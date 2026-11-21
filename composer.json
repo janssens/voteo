@@ -9,20 +9,20 @@
         "php": ">=8.3.17",
         "ext-ctype": "*",
         "ext-iconv": "*",
-        "doctrine/doctrine-migrations-bundle": "^3.4",
-        "easycorp/easyadmin-bundle": "^4.24",
+        "doctrine/doctrine-migrations-bundle": "^3.7.1",
+        "easycorp/easyadmin-bundle": "^4.29.17",
         "runtime/frankenphp-symfony": "^0.2.0",
-        "symfony/apache-pack": "^1.0",
-        "symfony/console": "7.2.*",
-        "symfony/dotenv": "7.2.*",
-        "symfony/flex": "^2",
-        "symfony/framework-bundle": "7.2.*",
-        "symfony/mailer": "7.2.*",
-        "symfony/runtime": "7.2.*",
-        "symfony/security-bundle": "7.2.*",
-        "symfony/yaml": "7.2.*",
-        "symfonycasts/verify-email-bundle": "^1.17",
-        "twig/intl-extra": "^3.20"
+        "symfony/apache-pack": "^1.0.1",
+        "symfony/console": "7.4.*",
+        "symfony/dotenv": "7.4.*",
+        "symfony/flex": "^2.12",
+        "symfony/framework-bundle": "7.4.*",
+        "symfony/mailer": "7.4.*",
+        "symfony/runtime": "7.4.*",
+        "symfony/security-bundle": "7.4.*",
+        "symfony/yaml": "7.4.*",
+        "symfonycasts/verify-email-bundle": "^1.18",
+        "twig/intl-extra": "^3.30"
     },
     "config": {
         "allow-plugins": {
@@ -71,11 +71,11 @@
     "extra": {
         "symfony": {
             "allow-contrib": false,
-            "require": "7.2.*",
+            "require": "7.4.*",
             "docker": true
         }
     },
     "require-dev": {
-        "symfony/maker-bundle": "^1.62"
+        "symfony/maker-bundle": "^1.68"
     }
 }

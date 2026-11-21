@@ -9,7 +9,7 @@ use Twig\TwigFunction;
 class AppExtension extends AbstractExtension
 {
 
-    public function getFilters()
+    public function getFilters(): array
     {
         return [
             new TwigFilter('base64_encode', 'base64_encode'),
@@ -17,7 +17,7 @@ class AppExtension extends AbstractExtension
         ];
     }
 
-    public function getFunctions()
+    public function getFunctions(): array
     {
         return [
             //new TwigFunction('config',[$this,'config'])
