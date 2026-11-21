@@ -83,8 +83,10 @@ jobs:
           FULL: ${{ inputs.full }}
         run: |
           DIR="${FTP_SERVER_DIR%/}"
-          # Garde-fou : --delete sur la racine FTP effacerait tout le compte
-          case "$DIR" in ""|"/"|"."|"~"|"public_html") echo "FTP_SERVER_DIR invalide: '$FTP_SERVER_DIR'"; exit 1;; esac
+          # Vide = racine du compte FTP (ex: compte FTP dédié dont le dossier est déjà celui du projet)
+          [ -z "$DIR" ] && DIR="."
+          # Garde-fou : --delete sur ces dossiers effacerait le reste de l'hébergement
+          case "$DIR" in "/"|"~"|"public_html") echo "FTP_SERVER_DIR invalide: '$FTP_SERVER_DIR'"; exit 1;; esac
 
           ONLY_NEWER="--only-newer"
           [ "$FULL" = "true" ] && ONLY_NEWER=""
