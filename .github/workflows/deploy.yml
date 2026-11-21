@@ -43,8 +43,9 @@ jobs:
           key: composer-${{ hashFiles('composer.lock') }}
           restore-keys: composer-
 
+      # Uniquement pour générer .env.local.php (composer dump-env) : vendor/ n'est pas envoyé
       - name: Install dependencies (prod)
-        run: composer install --no-dev --optimize-autoloader --classmap-authoritative --no-interaction --no-progress --no-scripts
+        run: composer install --no-dev --no-interaction --no-progress --no-scripts
 
       - name: Build .env.local.php from secrets
         env:
@@ -54,22 +55,25 @@ jobs:
           composer dump-env prod
           rm -f .env.prod.local
 
-      - name: Install bundle assets
-        run: php bin/console assets:install public --no-interaction
+      # vendor/ n'est pas envoyé : composer tourne sur le serveur quand composer.lock change
+      - name: Warn if composer.lock changed
+        if: github.event_name == 'push'
+        run: |
+          BEFORE="${{ github.event.before }}"
+          if [ "$BEFORE" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$BEFORE" 2>/dev/null \
+             || ! git diff --quiet "$BEFORE" HEAD -- composer.json composer.lock; then
+            echo "::warning title=composer::composer.lock a changé : lancer 'composer install --no-dev --optimize-autoloader' sur le serveur"
+          fi
 
-      # Le checkout et composer donnent la date "maintenant" à tous les fichiers.
-      # On remet des dates stables pour que lftp n'envoie que ce qui a changé :
-      # - fichiers du dépôt : date du dernier commit qui les modifie
-      # - vendor/ et public/bundles/ : date du dernier commit sur composer.lock
-      # - fichiers générés (autoload, .env.local.php) : maintenant (petits, renvoyés à chaque fois)
+      # Le checkout donne la date "maintenant" à tous les fichiers.
+      # On remet la date du dernier commit qui les modifie pour que lftp n'envoie que ce qui a changé.
+      # .env.local.php (généré) garde la date du jour : petit, renvoyé à chaque fois.
       - name: Restore stable file mtimes
         run: |
           git log --pretty=format:'@@TS@@%ct' --name-only --no-renames \
             | awk '/^@@TS@@/ { ts=substr($0,7); next } $0!="" && !($0 in seen) { seen[$0]=1; print ts "\t" $0 }' \
             | while IFS=$'\t' read -r ts f; do if [ -f "$f" ]; then touch -m -d "@$ts" "$f"; fi; done
-          LOCK_TS=$(git log -1 --format=%ct -- composer.lock)
-          find vendor public/bundles -exec touch -h -m -d "@$LOCK_TS" {} +
-          touch vendor/autoload.php vendor/composer/* .env.local.php
+          touch .env.local.php
 
       - name: Install lftp
         run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp
@@ -110,6 +114,8 @@ jobs:
             --exclude-glob .gitignore \
             --exclude-glob .gitattributes \
             --exclude-glob var/ \
+            --exclude-glob vendor/ \
+            --exclude-glob public/bundles/ \
             --exclude-glob docs/ \
             --exclude-glob frankenphp/ \
             --exclude-glob Dockerfile \

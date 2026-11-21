@@ -70,6 +70,83 @@ Quand l'option **Envoyer les résultats à la clôture** est cochée sur une que
 
 Chaque question n'est envoyée qu'une seule fois. `--dry-run` liste les questions concernées sans rien envoyer.
 
+## Mise en ligne (o2switch)
+
+La production est hébergée sur un mutualisé o2switch (Apache + PHP). Chaque push sur `main` déclenche le workflow [deploy.yml](.github/workflows/deploy.yml), qui envoie le code par FTPS avec `lftp`.
+
+### Ce que fait le workflow
+
+1. Génère `.env.local.php` à partir du secret `ENV_PROD` (`composer dump-env prod`).
+2. Restaure la date de chaque fichier à celle de son dernier commit, pour n'envoyer que les fichiers modifiés.
+3. Synchronise le projet vers le serveur (`lftp mirror --reverse --delete`). Les fichiers supprimés du dépôt sont supprimés sur le serveur.
+4. Vide le cache Symfony distant (`var/cache/prod`).
+
+Ne sont **pas** envoyés : `vendor/`, `public/bundles/`, `var/`, `docs/`, les fichiers Docker et les `.env` locaux. Ces dossiers ne sont jamais supprimés sur le serveur.
+
+Pour renvoyer tous les fichiers (si un fichier semble ne pas avoir été mis à jour) : onglet **Actions** → *Deploy o2switch (FTP)* → **Run workflow**, en cochant `full`.
+
+### Configuration initiale
+
+**Secrets GitHub** (*Settings → Environments → `production`*) :
+
+| Secret | Contenu |
+|---|---|
+| `FTP_SERVER` | hôte FTP, par ex. `ftp.mondomaine.fr` |
+| `FTP_USERNAME` | utilisateur FTP cPanel |
+| `FTP_PASSWORD` | mot de passe FTP |
+| `FTP_SERVER_DIR` | dossier du projet, relatif à la racine FTP (par ex. `voteo/`). Vide = racine du compte FTP |
+| `ENV_PROD` | variables de production, au format `.env` (voir ci-dessous) |
+
+```dotenv
+APP_SECRET=une_chaine_aleatoire_longue
+DATABASE_URL="postgresql://user:pass@localhost:5432/base?serverVersion=16&charset=utf8"
+MAILER_DSN=smtp://user:pass@mail.mondomaine.fr:465
+DEFAULT_URI=https://voteo.mondomaine.fr
+TRANSACTIONAL_MAIL_SENDER=no-reply@mondomaine.fr
+```
+
+> [!WARNING]
+> Le dossier cible ne doit contenir que Voteo : `--delete` y supprime tout ce qui n'est pas dans le dépôt. Si `FTP_SERVER_DIR` est vide, utilisez un compte FTP dédié dont le dossier est celui du projet. Les valeurs `/`, `~` et `public_html` sont refusées.
+
+**Dans cPanel :**
+
+- *Domaines* : faites pointer le domaine (ou sous-domaine) vers `voteo/public`.
+- *Sélectionner une version de PHP* : PHP 8.3 ou plus, avec les extensions `intl` et `pdo_pgsql`.
+- *PostgreSQL* : créez la base et l'utilisateur correspondant à `DATABASE_URL`.
+- *Tâches cron* : ajoutez l'envoi des résultats, par exemple toutes les 5 minutes :
+
+  ```cron
+  */5 * * * * cd ~/voteo && php bin/console app:send-results --no-interaction
+  ```
+
+Après le premier déploiement, depuis le *Terminal* cPanel :
+
+```bash
+cd ~/voteo
+composer install --no-dev --optimize-autoloader
+php bin/console doctrine:migrations:migrate --no-interaction
+```
+
+### À chaque mise en ligne
+
+Le push sur `main` suffit dans la plupart des cas. Deux actions restent manuelles, depuis le terminal cPanel :
+
+- **`composer.json` ou `composer.lock` a changé** (le workflow affiche alors un avertissement) :
+
+  ```bash
+  cd ~/voteo && composer install --no-dev --optimize-autoloader
+  ```
+
+  N'utilisez pas `--classmap-authoritative` : les nouvelles classes de `src/` arrivent sans que composer soit relancé, et ne seraient pas trouvées.
+
+- **Une nouvelle migration a été ajoutée** dans `migrations/` :
+
+  ```bash
+  cd ~/voteo && php bin/console doctrine:migrations:migrate --no-interaction
+  ```
+
+Si le FTP coupe en cours d'envoi (`ECONNRESET`, timeout), l'IP du runner a peut-être été bloquée par le pare-feu o2switch : vérifiez dans *Outil de déblocage d'IP* (cPanel), puis relancez le workflow.
+
 ## Structure du front
 
 | Élément | Emplacement |
