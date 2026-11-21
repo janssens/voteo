@@ -1,11 +1,18 @@
 {% extends 'base.html.twig' %}
+{% import 'partials/_icons.html.twig' as icon %}
 
 {% block title %}Oups !{% endblock %}
 
 {% block body %}
-<div class="wrapper">
-    <h1 style="color: #ee5253;"><b>Oups !</b></h1>
-
-    <p style="color: #ee5253;">{{ message }}</p>
+<div class="container form-page">
+    <section class="card form-card text-center">
+        <div class="icon-bubble rose" style="margin: 0 auto 1rem;">{{ icon.alert }}</div>
+        <h1 class="h2">Oups !</h1>
+        <p class="muted">{{ message|raw }}</p>
+        <p class="muted">Vérifiez que vous avez bien copié le lien reçu par email, ou contactez la personne qui vous a envoyé la question.</p>
+        <div class="form-actions">
+            <a class="btn btn-soft" href="{{ path('home') }}">Retour à l'accueil</a>
+        </div>
+    </section>
 </div>
 {% endblock %}

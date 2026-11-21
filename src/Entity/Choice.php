@@ -34,7 +34,6 @@ class Choice
     public function __construct()
     {
         $this->answers = new ArrayCollection();
-        $this->answerss = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -78,9 +77,9 @@ class Choice
         return $this;
     }
 
-    public function __toString()
+    public function __toString(): string
     {
-        return $this->getLabel();
+        return (string) $this->getLabel();
     }
 
     /**

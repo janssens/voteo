@@ -1,40 +1,56 @@
 {% extends 'base.html.twig' %}
+{% import 'partials/_icons.html.twig' as icon %}
 
-{% block title %}Log in!{% endblock %}
+{% block title %}Connexion{% endblock %}
 
 {% block body %}
-<form method="post">
-    {% if error %}
-        <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
-    {% endif %}
+<div class="container form-page">
+    <section class="card form-card" aria-labelledby="login-title">
+        <header class="form-card-header">
+            <div class="icon-bubble">{{ icon.lock }}</div>
+            <h1 id="login-title" class="h2">Bon retour parmi nous</h1>
+            <p>Connectez-vous pour gérer vos questions et vos listes de contacts.</p>
+        </header>
 
-    {% if app.user %}
-        <div class="mb-3">
-            You are logged in as {{ app.user.userIdentifier }}, <a href="{{ path('app_logout') }}">Logout</a>
-        </div>
-    {% endif %}
+        {% if error %}
+            <div class="alert alert-error" role="alert">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+        {% endif %}
 
-    <h1 class="h3 mb-3 font-weight-normal">Please sign in</h1>
-    <label for="inputUsername">Username</label>
-    <input type="text" value="{{ last_username }}" name="username" id="inputUsername" class="form-control" autocomplete="username" required autofocus>
-    <label for="inputPassword">Password</label>
-    <input type="password" name="password" id="inputPassword" class="form-control" autocomplete="current-password" required>
+        {% if app.user %}
+            <div class="alert alert-info">
+                <span>Vous êtes connecté·e en tant que <strong>{{ app.user.userIdentifier }}</strong>. <a href="{{ path('app_logout') }}">Se déconnecter</a></span>
+            </div>
+        {% endif %}
 
-    <input type="hidden" name="_csrf_token"
-           value="{{ csrf_token('authenticate') }}"
-    >
+        <form method="post">
+            <div class="form-row">
+                <label class="form-label required" for="inputUsername">Nom d'utilisateur</label>
+                <input type="text" value="{{ last_username }}" name="username" id="inputUsername" class="form-control" autocomplete="username" required autofocus>
+            </div>
 
-    <div class="checkbox mb-3">
-        <label>
-            <input type="checkbox" name="_remember_me"> Remember me
-        </label>
-    </div>
+            <div class="form-row">
+                <label class="form-label required" for="inputPassword">Mot de passe</label>
+                <input type="password" name="password" id="inputPassword" class="form-control" autocomplete="current-password" required>
+            </div>
 
-    <button class="btn btn-lg btn-primary" type="submit">
-        Sign in
-    </button>
-</form>
-Pas encore de compte ? Inscrivez-vous, c'est gratuit 
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
 
-<a href="{{ path('app_register') }}">Inscription</a>
+            <div class="form-row">
+                <label class="form-check">
+                    <input type="checkbox" name="_remember_me">
+                    <span>Se souvenir de moi</span>
+                </label>
+            </div>
+
+            <div class="form-actions">
+                <button class="btn btn-lg btn-block" type="submit">Se connecter</button>
+            </div>
+        </form>
+
+        <footer class="form-footer">
+            <p>Pas encore de compte ? C'est gratuit.</p>
+            <a href="{{ path('app_register') }}">Créer un compte</a>
+        </footer>
+    </section>
+</div>
 {% endblock %}

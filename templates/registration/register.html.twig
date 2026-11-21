@@ -1,26 +1,37 @@
 {% extends 'base.html.twig' %}
+{% import 'partials/_icons.html.twig' as icon %}
 
-{% block title %}Register{% endblock %}
+{% block title %}Créer un compte{% endblock %}
 
 {% block body %}
-    {% for flash_error in app.flashes('verify_email_error') %}
-        <div class="alert alert-danger" role="alert">{{ flash_error }}</div>
-    {% endfor %}
+<div class="container form-page">
+    <section class="card form-card" aria-labelledby="register-title">
+        <header class="form-card-header">
+            <div class="icon-bubble mint">{{ icon.user_plus }}</div>
+            <h1 id="register-title" class="h2">Créer un compte</h1>
+            <p>Gratuit, sans engagement. Posez votre première question en quelques minutes.</p>
+        </header>
 
-    <h1>Register</h1>
+        {{ form_start(registrationForm, {attr: {novalidate: 'novalidate'}}) }}
+            {{ form_errors(registrationForm) }}
 
-    {{ form_errors(registrationForm) }}
+            <div class="form-grid">
+                {{ form_row(registrationForm.firstname) }}
+                {{ form_row(registrationForm.lastname) }}
+            </div>
+            {{ form_row(registrationForm.username) }}
+            {{ form_row(registrationForm.email) }}
+            {{ form_row(registrationForm.plainPassword) }}
+            {{ form_row(registrationForm.agreeTerms) }}
 
-    {{ form_start(registrationForm) }}
-        {{ form_row(registrationForm.firstname) }}
-        {{ form_row(registrationForm.lastname) }}
-        {{ form_row(registrationForm.username) }}
-        {{ form_row(registrationForm.email) }}
-        {{ form_row(registrationForm.plainPassword, {
-            label: 'Password'
-        }) }}
-        {{ form_row(registrationForm.agreeTerms) }}
+            <div class="form-actions">
+                <button type="submit" class="btn btn-lg btn-block">Créer mon compte</button>
+            </div>
+        {{ form_end(registrationForm) }}
 
-        <button type="submit" class="btn">Register</button>
-    {{ form_end(registrationForm) }}
+        <footer class="form-footer">
+            <p>Déjà inscrit·e ? <a href="{{ path('app_login') }}">Se connecter</a></p>
+        </footer>
+    </section>
+</div>
 {% endblock %}

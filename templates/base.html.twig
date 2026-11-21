@@ -1,46 +1,68 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
     <head>
         <meta charset="UTF-8">
-        <title>{% block title %}Welcome!{% endblock %}</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="{% block meta_description %}Voteo : demandez l'avis de vos membres directement par email. Gratuit et open-source.{% endblock %}">
+        <meta name="theme-color" content="#f4f1ff">
+        <title>{% block title %}Voteo{% endblock %} · Voteo</title>
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗳️</text></svg>">
         {% block stylesheets %}
+            <link rel="stylesheet" href="{{ asset('css/app.css') }}">
         {% endblock %}
 
         {% block javascripts %}
         {% endblock %}
-
-        <style>
-            a{
-                color: blue;
-                text-decoration: underline;
-                cursor: pointer;
-            }
-            .messages {
-                text-align: center;
-                background: white
-            }
-            .messages > div {
-                margin: 2rem;
-                font-size: 20px;
-                font-weight: bold;
-            }
-            .messages .success { color: #10ac84;}
-            .messages .error { color: #ee5253;}
-            .messages .notice { color: #5f27cd;}
-        </style>
     </head>
-    <body>
-        <div class="messages wrapper">
-            {% for success in app.flashes('success') %}
-                <div class="success">{{ success }}</div>
-            {% endfor %}
-            {% for error in app.flashes('error') %}
-                <div class="error">{{ error }}</div>
-            {% endfor %}
-            {% for notice in app.flashes('notice') %}
-                <div class="notice">{{ notice }}</div>
-            {% endfor %}
-        </div>
-        {% block body %}{% endblock %}
+    <body class="{% block body_class %}{% endblock %}">
+        {% import 'partials/_icons.html.twig' as icon %}
+        <a class="skip-link" href="#contenu">Aller au contenu</a>
+
+        <header class="site-header">
+            <div class="container">
+                <a class="brand" href="{{ path('home') }}" aria-label="Voteo, retour à l'accueil">
+                    <span class="brand-mark" aria-hidden="true">{{ icon.check }}</span>
+                    Voteo
+                </a>
+                <nav class="site-nav" aria-label="Navigation principale">
+                    {% if app.user %}
+                        <a href="{{ path('admin') }}">Mon espace</a>
+                        <a href="{{ path('app_logout') }}">Déconnexion</a>
+                    {% else %}
+                        <a href="{{ path('app_login') }}">Connexion</a>
+                        <a class="btn btn-sm" href="{{ path('app_register') }}">Créer un compte</a>
+                    {% endif %}
+                </nav>
+            </div>
+        </header>
+
+        <main id="contenu" class="site-main">
+            <div class="container">
+                {% set flash_types = {success: 'success', error: 'error', notice: 'notice', verify_email_error: 'error'} %}
+                {% set flashes = app.flashes(flash_types|keys) %}
+                {% if flashes|filter(messages => messages is not empty)|length %}
+                    <div class="flashes" role="status">
+                        {% for type, messages in flashes %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ flash_types[type] }}">{{ message }}</div>
+                            {% endfor %}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            {% block body %}{% endblock %}
+        </main>
+
+        <footer class="site-footer">
+            <div class="container">
+                <span>© {{ 'now'|date('Y') }} Voteo · libre, gratuit et open-source</span>
+                <nav aria-label="Liens de pied de page">
+                    <a href="{{ path('home') }}">Accueil</a>
+                    <a href="{{ path('home') }}#comment-ca-marche">Comment ça marche</a>
+                    <a href="https://github.com/janssens/voteo" rel="noopener">Code source</a>
+                </nav>
+            </div>
+        </footer>
     </body>
 </html>

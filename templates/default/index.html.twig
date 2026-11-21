@@ -1,10 +1,151 @@
 {% extends 'base.html.twig' %}
+{% import 'partials/_icons.html.twig' as icon %}
 
-{% block title %}titre{% endblock %}
+{% block title %}Demandez l'avis de vos membres, simplement{% endblock %}
 
 {% block body %}
-<div class="wrapper">
-    <a href="{{ path('app_login') }}">connexion</a> |
-    <a href="{{ path('app_register') }}">enregistrement</a>
+<div class="container">
+
+    {# ---------- Hero ---------- #}
+    <section class="hero">
+        <span class="eyebrow">{{ icon.heart }} Libre, gratuit et open-source</span>
+        <h1>Recueillez l'avis de vos membres <span class="highlight">directement dans leur boîte mail</span></h1>
+        <p class="lead">
+            Voteo envoie votre question par email. Vos membres répondent d'un simple clic,
+            sans créer de compte ni installer d'application. Vous suivez les réponses en temps réel.
+        </p>
+        <div class="hero-actions">
+            {% if app.user %}
+                <a class="btn btn-lg" href="{{ path('admin') }}">Accéder à mon espace</a>
+            {% else %}
+                <a class="btn btn-lg" href="{{ path('app_register') }}">Créer un compte gratuit</a>
+                <a class="btn btn-lg btn-soft" href="#comment-ca-marche">Comment ça marche ?</a>
+            {% endif %}
+        </div>
+
+        <div class="mail-preview" aria-label="Exemple d'email reçu par un membre">
+            <div class="mail-preview-head">
+                <span class="avatar" aria-hidden="true">A</span>
+                <div>
+                    <strong>Association Les Jardins Partagés</strong>
+                    Pique-nique de printemps : on le fait ?
+                </div>
+            </div>
+            <p>Bonjour Camille,<br>nous pensons organiser un pique-nique le samedi 12 avril. Seras-tu des nôtres ?</p>
+            <div class="mail-choices" aria-hidden="true">
+                <span class="chip-mint">Oui, avec plaisir</span>
+                <span class="chip-sky">Peut-être</span>
+                <span class="chip-rose">Non, désolé·e</span>
+            </div>
+        </div>
+    </section>
+
+    {# ---------- Comment ça marche ---------- #}
+    <section class="section" id="comment-ca-marche" aria-labelledby="how-title">
+        <div class="section-header">
+            <h2 id="how-title">Comment ça marche ?</h2>
+            <p>Trois étapes, et aucune contrainte pour vos membres.</p>
+        </div>
+        <div class="grid grid-3 steps">
+            <article class="feature step">
+                <h3>Rédigez votre question</h3>
+                <p>Un sujet, une introduction, et les réponses possibles. Choix unique ou choix multiple, à vous de décider.</p>
+            </article>
+            <article class="feature step">
+                <h3>Envoyez-la à vos listes</h3>
+                <p>Ajoutez vos contacts, regroupez-les en listes, puis envoyez la question en un clic. Chaque membre reçoit un email personnel.</p>
+            </article>
+            <article class="feature step">
+                <h3>Suivez les réponses</h3>
+                <p>Vos membres cliquent sur leur réponse directement dans l'email. Vous voyez le taux de participation et les résultats instantanément.</p>
+            </article>
+        </div>
+    </section>
+
+    {# ---------- Pour qui ---------- #}
+    <section class="section" aria-labelledby="who-title">
+        <div class="section-header">
+            <h2 id="who-title">Pour tous les collectifs</h2>
+            <p>Dès qu'un groupe a besoin de prendre une décision ou de sonder ses membres, Voteo est là.</p>
+        </div>
+        <div class="grid grid-4">
+            <article class="feature audience">
+                <div class="icon-bubble mint">{{ icon.heart }}</div>
+                <h3>Associations</h3>
+                <p>Date d'une assemblée, choix d'une activité, avis sur un projet.</p>
+            </article>
+            <article class="feature audience">
+                <div class="icon-bubble sky">{{ icon.users }}</div>
+                <h3>Groupes</h3>
+                <p>Clubs, collectifs, amicales, groupes de parents ou de voisins.</p>
+            </article>
+            <article class="feature audience">
+                <div class="icon-bubble peach">{{ icon.landmark }}</div>
+                <h3>Institutions</h3>
+                <p>Consultez simplement vos adhérents, élus ou usagers.</p>
+            </article>
+            <article class="feature audience">
+                <div class="icon-bubble rose">{{ icon.briefcase }}</div>
+                <h3>Entreprises</h3>
+                <p>Sondez vos équipes ou vos clients sans outil compliqué.</p>
+            </article>
+        </div>
+    </section>
+
+    {# ---------- Atouts ---------- #}
+    <section class="section" aria-labelledby="why-title">
+        <div class="section-header">
+            <h2 id="why-title">Pourquoi Voteo ?</h2>
+            <p>Un outil pensé pour la simplicité et la confiance.</p>
+        </div>
+        <div class="grid grid-3">
+            <article class="feature">
+                <div class="icon-bubble">{{ icon.mail }}</div>
+                <h3>Réponse depuis l'email</h3>
+                <p>Pas de compte, pas de mot de passe, pas d'application à installer pour vos membres. Un clic suffit.</p>
+            </article>
+            <article class="feature">
+                <div class="icon-bubble sky">{{ icon.list }}</div>
+                <h3>Choix unique ou multiple</h3>
+                <p>Posez une question fermée ou laissez vos membres sélectionner plusieurs options.</p>
+            </article>
+            <article class="feature">
+                <div class="icon-bubble mint">{{ icon.chart }}</div>
+                <h3>Résultats clairs</h3>
+                <p>Nombre de réponses, taux de participation et détail par option, en un coup d'œil.</p>
+            </article>
+            <article class="feature">
+                <div class="icon-bubble peach">{{ icon.gift }}</div>
+                <h3>Gratuit</h3>
+                <p>Aucun abonnement, aucune limite cachée. Voteo est et restera gratuit.</p>
+            </article>
+            <article class="feature">
+                <div class="icon-bubble">{{ icon.code }}</div>
+                <h3>Open-source</h3>
+                <p>Le code est public et sous licence MIT. Vous pouvez l'auditer, l'améliorer ou l'héberger vous-même.</p>
+            </article>
+            <article class="feature">
+                <div class="icon-bubble rose">{{ icon.shield }}</div>
+                <h3>Respect des données</h3>
+                <p>Vos contacts restent les vôtres. Pas de publicité, pas de revente, pas de pistage.</p>
+            </article>
+        </div>
+    </section>
+
+    {# ---------- Appel à l'action ---------- #}
+    <section class="section">
+        <div class="card cta">
+            <h2>Prêt·e à poser votre première question ?</h2>
+            <p>Créez votre compte en moins d'une minute et envoyez votre première consultation dès aujourd'hui.</p>
+            <div class="hero-actions">
+                {% if app.user %}
+                    <a class="btn btn-lg" href="{{ path('admin') }}">Accéder à mon espace</a>
+                {% else %}
+                    <a class="btn btn-lg" href="{{ path('app_register') }}">Commencer gratuitement</a>
+                    <a class="btn btn-lg btn-soft" href="https://github.com/janssens/voteo" rel="noopener">Voir le code source</a>
+                {% endif %}
+            </div>
+        </div>
+    </section>
 </div>
 {% endblock %}

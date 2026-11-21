@@ -1,11 +1,13 @@
-<h1>Hi! Please confirm your email!</h1>
+<div style="font-family: 'Segoe UI', Roboto, Arial, sans-serif; color: #2f2b45; max-width: 520px; margin: 0 auto; padding: 24px; background: #f6f4ff; border-radius: 16px;">
+    <h1 style="font-size: 22px; margin: 0 0 16px;">Bienvenue sur Voteo !</h1>
 
-<p>
-    Please confirm your email address by clicking the following link: <br><br>
-    <a href="{{ signedUrl|raw }}">Confirm my Email</a>.
-    This link will expire in {{ expiresAtMessageKey|trans(expiresAtMessageData, 'VerifyEmailBundle') }}.
-</p>
+    <p>Pour finaliser la création de votre compte, merci de confirmer votre adresse email :</p>
 
-<p>
-    Cheers!
-</p>
+    <p style="text-align: center; margin: 28px 0;">
+        <a href="{{ signedUrl|raw }}" style="display: inline-block; padding: 12px 24px; background: #6c5ccf; color: #ffffff; text-decoration: none; font-weight: bold; border-radius: 999px;">Confirmer mon adresse email</a>
+    </p>
+
+    <p style="color: #6b6785; font-size: 14px;">Ce lien expirera dans {{ expiresAtMessageKey|trans(expiresAtMessageData, 'VerifyEmailBundle') }}.</p>
+
+    <p>À très vite,<br>L'équipe Voteo</p>
+</div>
