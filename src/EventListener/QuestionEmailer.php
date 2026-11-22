@@ -32,7 +32,7 @@ class QuestionEmailer
     }
 
 
-    protected function sendQuestionEmail(Question $question, bool $force = false){
+    protected function sendQuestionEmail(Question $question, bool $force = false, bool $reminder = false){
         $choices = $this->em->getRepository(Choice::class)->findBy(['question'=> $question]);
         $answers = $this->em->getRepository(Answer::class)->findBy(['question' => $question]);
 
@@ -68,9 +68,13 @@ class QuestionEmailer
         $organizer = $this->organizers->for($question);
         /** @var Contact $recipient */
         foreach ($recipients as $recipient) {
+            $subject = Personalizer::personalize($question->getSubject(), $recipient, false);
+            if ($reminder) {
+                $subject = '[relance] ' . $subject;
+            }
             $email = $this->organizers->address(new TemplatedEmail(), $organizer)
                 ->to(new Address($recipient->getEmail(), $recipient->getFullName()))
-                ->subject(Personalizer::personalize($question->getSubject(), $recipient, false))
+                ->subject($subject)
                 ->htmlTemplate('emails/first_send.html.twig')
                 ->textTemplate('emails/first_send.txt.twig')
                 ->context([
@@ -104,7 +108,7 @@ class QuestionEmailer
         $question = $event->getQuestion();
 
         if ($question->isSent()){
-            $this->sendQuestionEmail($question, false);
+            $this->sendQuestionEmail($question, false, true);
             $question->setSent(true);
             $this->em->flush();
         }
