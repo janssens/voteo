@@ -4,6 +4,7 @@ namespace App\Controller\Admin;
 
 use App\Entity\ContactList;
 use App\Entity\Question;
+use App\Organization\CurrentContext;
 use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminDashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Assets;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
@@ -16,6 +17,9 @@ use Symfony\Component\Routing\Attribute\Route;
 #[AdminDashboard(routePath: '/admin', routeName: 'admin')]
 class DashboardController extends AbstractDashboardController
 {
+    public function __construct(private readonly CurrentContext $currentContext)
+    {
+    }
 
     #[Route('/admin', name: 'admin')]
     public function index(): Response
@@ -59,6 +63,10 @@ class DashboardController extends AbstractDashboardController
         yield MenuItem::linkToDashboard('Dashboard', 'fa fa-home');
         yield MenuItem::linkToCrud('Listes de contacts', 'fa fa-send',ContactList::class);
         yield MenuItem::linkToCrud('Questions', 'fa fa-question',Question::class);
+        if (null !== $organization = $this->currentContext->getOrganization()) {
+            yield MenuItem::section($organization->getName());
+            yield MenuItem::linkToRoute('Organisation et membres', 'fa fa-users', 'admin_organization_show');
+        }
         yield MenuItem::section('Compte');
         yield MenuItem::linkToRoute('Mon compte et mes données', 'fa fa-user-shield', 'account');
         yield MenuItem::linkToRoute('Politique de confidentialité', 'fa fa-file-lines', 'privacy_policy');

@@ -19,11 +19,14 @@ class OrganizationType extends AbstractType
         $builder
             ->add('name', TextType::class, [
                 'label' => 'Nom de l\'organisation',
+                // Champ vidé : chaîne vide (refusée par NotBlank) plutôt que null (refusé par le setter typé).
+                'empty_data' => '',
                 'help' => 'Il apparaît comme expéditeur des emails : « Asso Jardins partagés via Voteo ».',
                 'attr' => ['autocomplete' => 'organization'],
             ])
             ->add('contactEmail', EmailType::class, [
                 'label' => 'Adresse email de contact',
+                'empty_data' => '',
                 'help' => 'Les réponses des membres aux emails de l\'organisation arrivent à cette adresse.',
                 'attr' => ['autocomplete' => 'email'],
             ])

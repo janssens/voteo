@@ -1,0 +1,75 @@
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{# Fiche de l'organisation active. Context : organization, memberships (triés), can_leave (plus d'un membre). #}
+{% block content_title %}{{ organization.name }}{% endblock %}
+
+{% block page_actions %}
+    <a class="btn btn-secondary" href="{{ path('admin_organization_edit') }}"><i class="fa fa-pen"></i> Modifier</a>
+{% endblock %}
+
+{% block main %}
+    <div class="vt-narrow-panel">
+        <dl class="vt-org-details">
+            <dt>Email de contact</dt>
+            <dd>
+                <a href="mailto:{{ organization.contactEmail }}">{{ organization.contactEmail }}</a>
+                <div class="form-text">Adresse de réponse des emails envoyés au nom de l'organisation.</div>
+            </dd>
+            <dt>Créée le</dt>
+            <dd>{{ organization.createdAt|format_date('long', locale: 'fr') }}</dd>
+        </dl>
+
+        <h2 class="h4 mt-5">Membres <span class="badge badge-secondary">{{ memberships|length }}</span></h2>
+        <p class="text-muted">Tous les membres ont les mêmes droits. Un membre retiré perd l'accès, mais ses listes et questions restent à l'organisation.</p>
+
+        <table class="table datagrid">
+            <thead>
+                <tr><th>Nom</th><th>Email</th><th>Membre depuis</th><th></th></tr>
+            </thead>
+            <tbody>
+                {% for membership in memberships %}
+                    {% set member = membership.user %}
+                    {% set is_self = member == app.user %}
+                    <tr>
+                        <td>{{ member.fullName }}{% if is_self %} <span class="badge badge-info">vous</span>{% endif %}</td>
+                        <td>{{ member.email }}</td>
+                        <td>
+                            {{ membership.joinedAt|format_date('medium', locale: 'fr') }}
+                            {% if membership.invitedBy %}<div class="form-text">invité·e par {{ membership.invitedBy.fullName }}</div>{% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if can_leave %}
+                                <form method="post" action="{{ path('admin_organization_member_remove', {membershipId: membership.id}) }}"
+                                      onsubmit="return confirm({{ (is_self
+                                          ? 'Quitter « ' ~ organization.name ~ ' » ? Vous n\'aurez plus accès à ses listes et questions.'
+                                          : 'Retirer ' ~ member.fullName ~ ' de l\'organisation ?')|json_encode(constant('JSON_UNESCAPED_UNICODE'))|e('html_attr') }})">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('member_remove_' ~ membership.id) }}">
+                                    <button type="submit" class="btn btn-sm {{ is_self ? 'btn-secondary' : 'btn-danger' }}">
+                                        {{ is_self ? 'Quitter l\'organisation' : 'Retirer' }}
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if not can_leave %}
+            <p class="form-text">Vous êtes le seul membre : invitez quelqu'un avant de pouvoir quitter l'organisation, ou supprimez-la.</p>
+        {% endif %}
+
+        <section class="vt-danger-zone mt-5">
+            <h2 class="h4">Supprimer l'organisation</h2>
+            <p>
+                Toutes ses listes, contacts, questions et réponses seront <strong>définitivement supprimés</strong>,
+                pour tous les membres. Pour confirmer, saisissez le nom de l'organisation.
+            </p>
+            <form method="post" action="{{ path('admin_organization_delete') }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('organization_delete') }}">
+                <label class="form-label" for="confirm_name">Nom de l'organisation</label>
+                <input class="form-control mb-3" type="text" id="confirm_name" name="confirm_name" required autocomplete="off" placeholder="{{ organization.name }}">
+                <button type="submit" class="btn btn-danger">Supprimer définitivement</button>
+            </form>
+        </section>
+    </div>
+{% endblock %}
