@@ -60,6 +60,14 @@ Créez un compte via **Créer un compte**, puis ajoutez vos contacts, vos listes
 
 Pour arrêter : `docker compose down --remove-orphans`.
 
+### Tests
+
+Tests unitaires (sans base de données) : droits d'accès, contexte personnel / organisation, expéditeur des emails, règles des organisations et invitations.
+
+```bash
+docker compose exec php bin/phpunit
+```
+
 ### Envoi automatique des résultats (cron)
 
 Quand l'option **Envoyer les résultats à la clôture** est cochée sur une question, les résultats sont envoyés par email à tous les destinataires une fois la date de clôture passée. L'envoi est fait par la commande `app:send-results`, à lancer régulièrement, par exemple toutes les 5 minutes depuis la crontab de l'hôte :
