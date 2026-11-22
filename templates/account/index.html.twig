@@ -30,9 +30,13 @@
 
         <h2 class="h3">Mes données</h2>
         <p>
-            Votre compte contient {{ nb_lists }} liste{{ nb_lists > 1 ? 's' }},
+            Votre espace personnel contient {{ nb_lists }} liste{{ nb_lists > 1 ? 's' }},
             {{ nb_contacts }} contact{{ nb_contacts > 1 ? 's' }} et
             {{ nb_questions }} question{{ nb_questions > 1 ? 's' }}.
+            {% if organizations is not empty %}
+                Vous êtes membre de {{ organizations|length > 1 ? 'ces organisations' : 'l\'organisation' }}
+                {{ organizations|map(o => '« ' ~ o.name ~ ' »')|join(', ', ' et ') }}.
+            {% endif %}
             {% if app.user.privacyAcceptedAt %}
                 Politique de confidentialité acceptée le {{ app.user.privacyAcceptedAt|format_date('long', locale: 'fr') }}.
             {% endif %}
@@ -49,9 +53,22 @@
         <div class="danger-zone">
             <h2 class="h3">Supprimer mon compte</h2>
             <p>
-                Votre compte, vos listes, vos contacts, vos questions et toutes les réponses reçues seront
+                Votre compte, vos listes et questions personnelles, leurs contacts et toutes les réponses reçues seront
                 définitivement supprimés. Pensez à télécharger vos données avant. Cette action est irréversible.
             </p>
+            {% if organizations is not empty %}
+                <p>
+                    Vous serez retiré·e de vos organisations. Les listes et questions que vous y avez créées restent à
+                    l'organisation, sans votre nom.
+                </p>
+            {% endif %}
+            {% if blocking_organizations is not empty %}
+                <p>
+                    <strong>Vous êtes le seul membre de {{ blocking_organizations|map(o => '« ' ~ o.name ~ ' »')|join(', ', ' et ') }}.</strong>
+                    Supprimez {{ blocking_organizations|length > 1 ? 'ces organisations' : 'cette organisation' }}, ou invitez quelqu'un,
+                    depuis <a href="{{ path('admin') }}">Mon espace</a> avant de supprimer votre compte.
+                </p>
+            {% endif %}
             <form method="post" action="{{ path('account_delete') }}"
                   onsubmit="return confirm('Supprimer définitivement votre compte et toutes vos données ?');">
                 <input type="hidden" name="_token" value="{{ csrf_token('account_delete') }}">

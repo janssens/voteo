@@ -70,6 +70,14 @@ Quand l'option **Envoyer les résultats à la clôture** est cochée sur une que
 
 Chaque question n'est envoyée qu'une seule fois. `--dry-run` liste les questions concernées sans rien envoyer.
 
+### Purge des invitations expirées (cron)
+
+Les invitations à rejoindre une organisation contiennent l'adresse email de la personne invitée. Une fois le lien expiré (7 jours), elles restent visibles et renvoyables pendant 30 jours, puis la commande `app:purge-invitations` les supprime. À lancer une fois par jour :
+
+```cron
+30 3 * * * cd /chemin/vers/voteo && docker compose exec -T php bin/console app:purge-invitations --no-interaction
+```
+
 ## Mise en ligne (o2switch)
 
 La production est hébergée sur un mutualisé o2switch (Apache + PHP). Le workflow [deploy.yml](.github/workflows/deploy.yml) envoie le code par FTPS avec `lftp`.
@@ -120,10 +128,11 @@ Les variables `LEGAL_*` alimentent les mentions légales et la politique de conf
 - *Domaines* : faites pointer le domaine (ou sous-domaine) vers `voteo/public`.
 - *Sélectionner une version de PHP* : PHP 8.3 ou plus, avec les extensions `intl` et `pdo_mysql`.
 - *Bases de données MySQL* : créez la base et l'utilisateur (avec tous les privilèges sur la base) correspondant à `DATABASE_URL`. Ajustez `serverVersion` à la version de MariaDB affichée dans phpMyAdmin.
-- *Tâches cron* : ajoutez l'envoi des résultats, par exemple toutes les 5 minutes :
+- *Tâches cron* : ajoutez l'envoi des résultats, par exemple toutes les 5 minutes, et la purge quotidienne des invitations expirées :
 
   ```cron
   */5 * * * * cd ~/voteo && php bin/console app:send-results --no-interaction
+  30 3 * * * cd ~/voteo && php bin/console app:purge-invitations --no-interaction
   ```
 
 Après le premier déploiement, depuis le *Terminal* cPanel :

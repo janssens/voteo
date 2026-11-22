@@ -6,6 +6,8 @@ use App\Entity\Answer;
 use App\Entity\Choice;
 use App\Entity\Contact;
 use App\Entity\ContactList;
+use App\Entity\Membership;
+use App\Entity\Organization;
 use App\Entity\Question;
 use App\Entity\User;
 use App\Repository\ContactListRepository;
@@ -24,7 +26,43 @@ class PersonalData
     }
 
     /**
-     * Toutes les données d'un compte organisateur, dans un format structuré (art. 15 et 20 du RGPD).
+     * Listes personnelles de l'utilisateur (hors organisations).
+     *
+     * @return ContactList[]
+     */
+    public function personalLists(User $user): array
+    {
+        return $this->lists->findBy(['owner' => $user, 'organization' => null]);
+    }
+
+    /**
+     * Questions personnelles de l'utilisateur (hors organisations).
+     *
+     * @return Question[]
+     */
+    public function personalQuestions(User $user): array
+    {
+        return array_values($user->getQuestions()->filter(static fn (Question $q) => null === $q->getOrganization())->toArray());
+    }
+
+    /**
+     * Organisations dont l'utilisateur est le seul membre : elles bloquent la suppression du compte,
+     * car elles se retrouveraient sans personne pour les gérer (même règle que pour quitter une organisation).
+     *
+     * @return Organization[]
+     */
+    public function organizationsBlockingDeletion(User $user): array
+    {
+        return array_values(array_filter(
+            $user->getOrganizations(),
+            static fn (Organization $o) => $o->getMemberships()->count() <= 1,
+        ));
+    }
+
+    /**
+     * Toutes les données d'un compte organisateur, dans un format structuré (art. 15 et 20 du RGPD) :
+     * le compte, ses listes et questions personnelles, et ses appartenances aux organisations.
+     * Les contenus des organisations appartiennent à l'organisation et n'y figurent pas.
      */
     public function exportUser(User $user): array
     {
@@ -47,7 +85,13 @@ class PersonalData
                     'lastname' => $c->getLastname(),
                     'email' => $c->getEmail(),
                 ], $list->getContacts()->getValues()),
-            ], $this->lists->findBy(['owner' => $user])),
+            ], $this->personalLists($user)),
+            'organizations' => array_map(static fn (Membership $m) => [
+                'name' => $m->getOrganization()?->getName(),
+                'contact_email' => $m->getOrganization()?->getContactEmail(),
+                'joined_at' => $date($m->getJoinedAt()),
+                'invited_by' => $m->getInvitedBy()?->getFullName(),
+            ], $user->getMemberships()->getValues()),
             'questions' => array_map(static fn (Question $q) => [
                 'subject' => $q->getSubject(),
                 'intro' => $q->getIntro(),
@@ -62,20 +106,32 @@ class PersonalData
                     'contact' => (string) $a->getContact(),
                     'choices' => array_map(static fn (Choice $c) => $c->getLabel(), $a->getChoices()->getValues()),
                 ], $q->getAnswers()->getValues()),
-            ], $user->getQuestions()->getValues()),
+            ], $this->personalQuestions($user)),
         ];
     }
 
     /**
-     * Supprime le compte et tout ce qui lui appartient : questions (choix, réponses), listes et contacts.
+     * Supprime le compte et ses contenus personnels : questions (choix, réponses), listes et contacts.
+     * Ses appartenances aux organisations disparaissent ; les listes et questions qu'il a créées dans une
+     * organisation restent à l'organisation, sans auteur.
+     *
+     * L'appelant vérifie d'abord organizationsBlockingDeletion().
      */
     public function deleteUser(User $user): void
     {
         foreach ($user->getQuestions() as $question) {
-            $this->em->remove($question);
+            if (null === $question->getOrganization()) {
+                $this->em->remove($question);
+            } else {
+                $question->setOwner(null);
+            }
         }
         foreach ($this->lists->findBy(['owner' => $user]) as $list) {
-            $this->em->remove($list);
+            if (null === $list->getOrganization()) {
+                $this->em->remove($list);
+            } else {
+                $list->setOwner(null);
+            }
         }
         $this->em->remove($user);
         $this->em->flush();

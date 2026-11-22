@@ -43,8 +43,9 @@
             </li>
             <li>
                 <strong>Vous avez reçu une question par email</strong> : c'est l'organisateur qui vous a ajouté·e à sa liste
-                qui est responsable du traitement. Il a saisi lui-même vos nom, prénom et adresse email, et décide des
-                questions qui vous sont envoyées. L'éditeur du site agit pour son compte, en tant que sous-traitant
+                qui est responsable du traitement. Il s'agit soit d'une personne, soit d'une organisation (association,
+                collectif…) dont le nom figure comme expéditeur de l'email. Il a saisi lui-même vos nom, prénom et adresse
+                email, et décide des questions qui vous sont envoyées. L'éditeur du site agit pour son compte, en tant que sous-traitant
                 (article 28 du RGPD), et n'utilise vos données pour aucune autre finalité.
             </li>
         </ul>
@@ -61,6 +62,11 @@
             <li>Authentification : mot de passe, conservé uniquement sous forme chiffrée (hachage irréversible).</li>
             <li>Date d'acceptation de la présente politique.</li>
             <li>Contenus créés : listes de contacts, questions, choix de réponse, paramètres d'envoi.</li>
+            <li>
+                Organisations : nom, adresse email de contact (adresse de réponse des emails envoyés au nom de
+                l'organisation), liste des membres avec leur date d'arrivée et la personne qui les a invités.
+            </li>
+            <li>Invitations à rejoindre une organisation : adresse email de la personne invitée, personne qui invite, date d'expiration du lien.</li>
         </ul>
         <h3>Membres (destinataires des questions)</h3>
         <ul>
@@ -104,6 +110,11 @@
         <ul>
             <li><strong>L'organisateur</strong> voit les coordonnées de ses membres et le détail de leurs réponses.</li>
             <li>
+                <strong>Les membres d'une organisation</strong> : lorsqu'une liste ou une question appartient à une
+                organisation, tous ses membres y ont accès, avec les mêmes droits. Ils voient aussi les noms et adresses
+                email des autres membres et les invitations en attente.
+            </li>
+            <li>
                 <strong>Les autres membres consultés</strong> voient les résultats. Sauf si la question est marquée
                 « anonyme », le prénom des votants apparaît à côté de chaque réponse.
                 Le mode anonyme est indiqué dans l'email reçu.
@@ -117,8 +128,10 @@
 
         <h2>Combien de temps sont-elles conservées ?</h2>
         <ul>
-            <li><strong>Compte organisateur</strong> : jusqu'à sa suppression par vous-même, depuis « Mon compte ». Toutes les données associées (listes, contacts, questions, réponses) sont alors supprimées immédiatement.</li>
-            <li><strong>Données des membres</strong> : jusqu'à leur suppression par l'organisateur, par le membre lui-même (lien « Consulter ou supprimer mes données » présent dans chaque email), ou par la suppression du compte de l'organisateur.</li>
+            <li><strong>Compte organisateur</strong> : jusqu'à sa suppression par vous-même, depuis « Mon compte ». Vos listes, contacts, questions et réponses personnels sont alors supprimés immédiatement, et vous êtes retiré·e de vos organisations. Les listes et questions que vous avez créées dans une organisation restent à l'organisation, sans votre nom.</li>
+            <li><strong>Organisations</strong> : jusqu'à leur suppression par l'un de leurs membres. Toutes leurs listes, contacts, questions et réponses sont alors supprimés immédiatement.</li>
+            <li><strong>Invitations</strong> : jusqu'à leur acceptation, leur refus ou leur annulation. Un lien d'invitation expire au bout de 7 jours ; l'invitation est supprimée 30 jours après son expiration.</li>
+            <li><strong>Données des membres</strong> : jusqu'à leur suppression par l'organisateur, par le membre lui-même (lien « Consulter ou supprimer mes données » présent dans chaque email), ou par la suppression du compte de l'organisateur ou de l'organisation.</li>
             <li><strong>Journaux du serveur</strong> : {{ legal.logs_retention ?: '12 mois' }} au plus.</li>
         </ul>
 
@@ -135,7 +148,7 @@
             <li>Les échanges avec le site sont chiffrés (HTTPS).</li>
             <li>Les mots de passe sont hachés et ne sont jamais conservés en clair.</li>
             <li>Chaque lien de réponse est personnel et impossible à deviner. Ne le transférez pas : il donne accès à votre réponse.</li>
-            <li>Chaque organisateur n'a accès qu'à ses propres listes et questions.</li>
+            <li>Chaque organisateur n'a accès qu'à ses propres listes et questions, et à celles des organisations dont il est membre.</li>
         </ul>
 
         <h2>Vos droits</h2>
@@ -165,6 +178,7 @@
             <li>n'ajouter que des personnes avec lesquelles il a une relation (membres, adhérents, collègues…) et qui peuvent raisonnablement s'attendre à être consultées ;</li>
             <li>ne pas utiliser le service pour de la prospection commerciale ou des envois non sollicités ;</li>
             <li>tenir ses listes à jour et supprimer les contacts qui le demandent ;</li>
+            <li>n'inviter dans une organisation que des personnes habilitées à accéder aux données de ses membres ;</li>
             <li>informer ses membres de l'usage de leurs données, la présente page pouvant servir de support.</li>
         </ul>
 

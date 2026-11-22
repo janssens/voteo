@@ -3,7 +3,7 @@
 
 {% block title %}Mes données{% endblock %}
 
-{# Accès d'un membre aux données le concernant, via son lien personnel. Context : contact, answer, organizer. #}
+{# Accès d'un membre aux données le concernant, via son lien personnel. Context : contact, answer, organizer (App\Mail\Organizer : auteur ou organisation de la liste). #}
 {% block body %}
 <div class="container narrow">
     <section class="card">
@@ -11,7 +11,7 @@
             <div class="icon-bubble sky" style="margin: 0 auto 1rem;">{{ icon.shield }}</div>
             <h1 class="h2">Vos données personnelles</h1>
             <p class="muted">
-                {% if organizer %}{{ organizer.fullName }}{% else %}Un organisateur{% endif %} vous a ajouté·e à
+                {% if organizer %}{{ organizer.name }}{% else %}Un organisateur{% endif %} vous a ajouté·e à
                 {% if contact.list %}sa liste « {{ contact.list.name }} »{% else %}l'une de ses listes{% endif %}
                 pour vous consulter via {{ legal.site_name }}. Voici les données enregistrées à votre sujet.
             </p>
@@ -23,7 +23,7 @@
             <dt>Nom</dt><dd>{{ contact.lastname }}</dd>
             <dt>Email</dt><dd>{{ contact.email }}</dd>
             {% if organizer %}
-                <dt>Organisateur</dt><dd>{{ organizer.fullName }} (<a href="mailto:{{ organizer.email }}">{{ organizer.email }}</a>)</dd>
+                <dt>Organisateur</dt><dd>{{ organizer.name }}{% if organizer.replyToEmail %} (<a href="mailto:{{ organizer.replyToEmail }}">{{ organizer.replyToEmail }}</a>){% endif %}</dd>
             {% endif %}
         </dl>
 
@@ -47,7 +47,7 @@
         {% endif %}
 
         <p class="muted">
-            Pour corriger ces informations, contactez l'organisateur{% if organizer %} à <a href="mailto:{{ organizer.email }}">{{ organizer.email }}</a>{% endif %}
+            Pour corriger ces informations, contactez l'organisateur{% if organizer and organizer.replyToEmail %} à <a href="mailto:{{ organizer.replyToEmail }}">{{ organizer.replyToEmail }}</a>{% endif %}
             ou répondez simplement à l'un de ses emails.
             En savoir plus : <a href="{{ path('privacy_policy') }}">politique de confidentialité</a>.
         </p>

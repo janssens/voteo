@@ -351,7 +351,11 @@ class Question
             return 0;
         }
         $total_of_possible_answers = count($this->getAnswers());
-    
+        // Plus aucun destinataire (contacts supprimés, à leur demande par exemple)
+        if (0 === $total_of_possible_answers) {
+            return 0;
+        }
+
         return $this->getNbOfResponses() / $total_of_possible_answers;
     }
 

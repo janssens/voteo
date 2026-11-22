@@ -5,7 +5,6 @@ namespace App\Controller;
 use App\Entity\User;
 use App\Form\AccountFormType;
 use App\Privacy\PersonalData;
-use App\Repository\ContactListRepository;
 use App\Security\EmailVerifier;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -29,7 +28,7 @@ final class AccountController extends AbstractController
     public function index(
         Request $request,
         EntityManagerInterface $em,
-        ContactListRepository $lists,
+        PersonalData $personalData,
         EmailVerifier $emailVerifier,
     ): Response {
         /** @var User $user */
@@ -56,13 +55,16 @@ final class AccountController extends AbstractController
             return $this->redirectToRoute('account');
         }
 
-        $userLists = $lists->findBy(['owner' => $user]);
+        // Données personnelles uniquement : les contenus des organisations appartiennent à l'organisation.
+        $userLists = $personalData->personalLists($user);
 
         return $this->render('account/index.html.twig', [
             'form' => $form,
             'nb_lists' => count($userLists),
             'nb_contacts' => array_sum(array_map(static fn ($l) => $l->getContacts()->count(), $userLists)),
-            'nb_questions' => $user->getQuestions()->count(),
+            'nb_questions' => count($personalData->personalQuestions($user)),
+            'organizations' => $user->getOrganizations(),
+            'blocking_organizations' => $personalData->organizationsBlockingDeletion($user),
         ]);
     }
 
@@ -99,9 +101,19 @@ final class AccountController extends AbstractController
             return $this->redirectToRoute('account');
         }
 
+        if ([] !== $blocking = $personalData->organizationsBlockingDeletion($user)) {
+            $this->addFlash('error', sprintf(
+                'Vous êtes le seul membre de %s : supprimez %s, ou invitez quelqu\'un, avant de supprimer votre compte.',
+                implode(', ', array_map(static fn ($o) => '« '.$o->getName().' »', $blocking)),
+                \count($blocking) > 1 ? 'ces organisations' : 'cette organisation',
+            ));
+
+            return $this->redirectToRoute('account');
+        }
+
         $personalData->deleteUser($user);
         $security->logout(false);
-        $this->addFlash('success', 'Votre compte et toutes vos données ont été définitivement supprimés.');
+        $this->addFlash('success', 'Votre compte et vos données personnelles ont été définitivement supprimés.');
 
         return $this->redirectToRoute('home');
     }

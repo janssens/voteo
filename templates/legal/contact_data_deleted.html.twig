@@ -13,8 +13,8 @@
         </p>
         {% if organizer %}
             <p class="muted">
-                Si vous figurez sur d'autres listes de {{ organizer.fullName }}, utilisez le lien présent dans les
-                emails correspondants, ou écrivez-lui à <a href="mailto:{{ organizer.email }}">{{ organizer.email }}</a>.
+                Si vous figurez sur d'autres listes de {{ organizer.name }}, utilisez le lien présent dans les
+                emails correspondants{% if organizer.replyToEmail %}, ou écrivez-lui à <a href="mailto:{{ organizer.replyToEmail }}">{{ organizer.replyToEmail }}</a>{% endif %}.
             </p>
         {% endif %}
         <div class="form-actions">

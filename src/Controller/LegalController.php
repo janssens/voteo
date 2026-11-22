@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Answer;
+use App\Mail\OrganizerResolver;
 use App\Privacy\PersonalData;
 use App\Repository\AnswerRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -33,7 +34,7 @@ final class LegalController extends AbstractController
      * et peut les supprimer (droits d'effacement et d'opposition), grâce à son lien personnel.
      */
     #[Route('/mes-donnees/{a_token}', name: 'contact_data', methods: ['GET', 'POST'])]
-    public function contactData(Request $request, string $a_token, AnswerRepository $answers, PersonalData $personalData): Response
+    public function contactData(Request $request, string $a_token, AnswerRepository $answers, PersonalData $personalData, OrganizerResolver $organizers): Response
     {
         /** @var Answer|null $answer */
         $answer = $answers->findOneBy(['token' => $a_token]);
@@ -43,6 +44,8 @@ final class LegalController extends AbstractController
             ], new Response(status: Response::HTTP_NOT_FOUND));
         }
         $contact = $answer->getContact();
+        // Auteur de la liste, ou son organisation (nom et adresse de contact)
+        $organizer = $contact->getList() ? $organizers->for($contact) : null;
 
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('contact_data_delete_'.$answer->getToken(), (string) $request->request->get('_token'))) {
@@ -50,7 +53,6 @@ final class LegalController extends AbstractController
 
                 return $this->redirectToRoute('contact_data', ['a_token' => $a_token]);
             }
-            $organizer = $contact->getList()?->getOwner();
             $personalData->deleteContact($contact);
 
             return $this->render('legal/contact_data_deleted.html.twig', ['organizer' => $organizer]);
@@ -59,7 +61,7 @@ final class LegalController extends AbstractController
         return $this->render('legal/contact_data.html.twig', [
             'contact' => $contact,
             'answer' => $answer,
-            'organizer' => $contact->getList()?->getOwner(),
+            'organizer' => $organizer,
         ]);
     }
 }

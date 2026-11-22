@@ -15,4 +15,19 @@ class InvitationRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Invitation::class);
     }
+
+    /**
+     * Supprime les invitations dont le lien a expiré avant $before (avec l'adresse de la personne invitée).
+     *
+     * @return int nombre d'invitations supprimées
+     */
+    public function deleteExpiredBefore(\DateTimeImmutable $before): int
+    {
+        return (int) $this->createQueryBuilder('i')
+            ->delete()
+            ->where('i.expiresAt < :before')
+            ->setParameter('before', $before)
+            ->getQuery()
+            ->execute();
+    }
 }
