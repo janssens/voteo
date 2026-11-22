@@ -61,7 +61,11 @@ class QuestionCrudController extends AbstractCrudController
      */
     private function getOwnedQuestion(AdminContext $context): Question
     {
+        // EasyAdmin vide l'instance quand l'entity permission est refusée : null = pas le droit
         $question = $context->getEntity()->getInstance();
+        if (!$question instanceof Question) {
+            throw $this->createAccessDeniedException();
+        }
         $this->denyAccessUnlessGranted(OwnerVoter::OWNER, $question);
 
         return $question;

@@ -21,7 +21,7 @@ Voteo est une application web **libre, gratuite et open-source** qui permet aux 
 
 - Réponse en un clic depuis l'email, sans compte pour les membres
 - Questions à choix unique ou multiple
-- Gestion des contacts et des listes de diffusion
+- Gestion des contacts et des listes de diffusion, import CSV (Excel, LibreOffice, Google Sheets)
 - Résultats en direct : nombre de réponses, taux de participation, détail par option
 - Espace d'administration pour les organisateurs (EasyAdmin)
 - Interface en français, adaptée au mobile

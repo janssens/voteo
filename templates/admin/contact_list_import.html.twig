@@ -1,0 +1,104 @@
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{# Import CSV de contacts dans une liste. Context : list, report (ContactImportReport|null), error, max_rows, edit_url, back_url. #}
+{% block content_title %}Importer des contacts · {{ list.name }}{% endblock %}
+
+{% block page_actions %}
+    <a class="btn btn-secondary" href="{{ back_url }}"><i class="fa fa-arrow-left"></i> Retour aux listes</a>
+    <a class="btn btn-secondary" href="{{ edit_url }}"><i class="fa fa-pen"></i> Modifier la liste</a>
+{% endblock %}
+
+{% block main %}
+    {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
+    {% if report %}
+        {% set file_error = report.errors|filter(e => e.line == 0) %}
+        <div class="alert {{ report.added + report.updated > 0 ? 'alert-success' : (report.errors is empty ? 'alert-info' : 'alert-warning') }}">
+            {% if file_error is not empty %}
+                <strong>Fichier non importé :</strong> {{ (file_error|first).message }}
+            {% else %}
+                <strong>Import terminé.</strong>
+                {{ report.added }} contact{{ report.added > 1 ? 's' }} ajouté{{ report.added > 1 ? 's' }}
+                {%- if report.updated %}, {{ report.updated }} mis à jour{% endif %}
+                {%- if report.skipped %}, {{ report.skipped }} déjà présent{{ report.skipped > 1 ? 's' }} (ignoré{{ report.skipped > 1 ? 's' }}){% endif %}
+                {%- if report.errors is not empty %}, {{ report.errors|length }} ligne{{ report.errors|length > 1 ? 's' }} en erreur{% endif %}.
+                La liste compte maintenant {{ list.contacts|length }} contact{{ list.contacts|length > 1 ? 's' }}.
+            {% endif %}
+        </div>
+
+        {% if report.errors is not empty and file_error is empty %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h2 class="h6">Lignes non importées</h2>
+                    <ul class="mb-0">
+                        {% for e in report.errors|slice(0, 100) %}
+                            <li>Ligne {{ e.line }} : {{ e.message }}</li>
+                        {% endfor %}
+                        {% if report.errors|length > 100 %}
+                            <li class="text-muted">… et {{ report.errors|length - 100 }} autres.</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        {% endif %}
+    {% endif %}
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        <input type="hidden" name="_token" value="{{ csrf_token('import_csv_' ~ list.id) }}">
+
+                        <div class="mb-3">
+                            <label class="form-label required" for="csv_file">Fichier CSV</label>
+                            <input class="form-control" type="file" id="csv_file" name="csv_file" accept=".csv,.txt,.tsv,text/csv" required>
+                            <div class="form-text">2 Mo et {{ max_rows }} lignes au maximum.</div>
+                        </div>
+
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="update_existing" name="update_existing" value="1">
+                            <label class="form-check-label" for="update_existing">
+                                Mettre à jour le prénom et le nom des contacts déjà présents dans la liste
+                            </label>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="consent" name="consent" value="1" required>
+                            <label class="form-check-label" for="consent">
+                                Je confirme que ces personnes sont des membres ou des proches de mon organisation,
+                                et qu'elles peuvent s'attendre à être consultées
+                                (<a href="{{ path('privacy_policy') }}" target="_blank" rel="noopener">politique de confidentialité</a>).
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary"><i class="fa fa-file-import"></i> Importer</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="h6">Format attendu</h2>
+                    <p>Une ligne par personne, avec une ligne d'en-tête :</p>
+                    <pre class="bg-light p-2 rounded small mb-3">prénom;nom;email
+Camille;Martin;camille.martin@example.org</pre>
+                    <ul class="small">
+                        <li>Colonnes reconnues : <strong>prénom</strong>, <strong>nom</strong>, <strong>email</strong> (ou courriel, mail…), dans n'importe quel ordre. Les autres colonnes sont ignorées.</li>
+                        <li>Seule la colonne email est obligatoire.</li>
+                        <li>Séparateur point-virgule, virgule ou tabulation, détecté automatiquement.</li>
+                        <li>Exports Excel, LibreOffice et Google Sheets acceptés, accents compris.</li>
+                        <li>Les adresses déjà présentes dans la liste ne sont pas ajoutées en double.</li>
+                    </ul>
+                    <a class="btn btn-sm btn-secondary" href="{{ asset('files/modele-contacts.csv') }}" download>
+                        <i class="fa fa-download"></i> Télécharger un modèle
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
