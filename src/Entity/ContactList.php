@@ -18,9 +18,15 @@ class ContactList
     #[ORM\Column(length: 255)]
     private ?string $name = null;
 
+    /** Auteur. Null si son compte a été supprimé (la liste d'organisation reste à l'organisation). */
     #[ORM\ManyToOne]
-    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
     private ?User $owner = null;
+
+    /** Organisation propriétaire. Null = liste personnelle de l'auteur. */
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'CASCADE')]
+    private ?Organization $organization = null;
 
     /**
      * @var Collection<int, Contact>
@@ -53,6 +59,18 @@ class ContactList
     public function setOwner(?User $owner): static
     {
         $this->owner = $owner;
+
+        return $this;
+    }
+
+    public function getOrganization(): ?Organization
+    {
+        return $this->organization;
+    }
+
+    public function setOrganization(?Organization $organization): static
+    {
+        $this->organization = $organization;
 
         return $this;
     }

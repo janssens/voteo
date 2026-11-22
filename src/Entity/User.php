@@ -32,8 +32,19 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @var Collection<int, Question>
      */
-    #[ORM\OneToMany(targetEntity: Question::class, mappedBy: 'owner', orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: Question::class, mappedBy: 'owner')]
     private Collection $questions;
+
+    /**
+     * @var Collection<int, Membership>
+     */
+    #[ORM\OneToMany(targetEntity: Membership::class, mappedBy: 'user', orphanRemoval: true)]
+    private Collection $memberships;
+
+    /** Dernier contexte choisi dans le sélecteur global (null = personnel), restauré à la connexion. */
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?Organization $lastOrganization = null;
 
     #[ORM\Column(length: 50)]
     private ?string $username = null;
@@ -54,6 +65,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function __construct()
     {
         $this->questions = new ArrayCollection();
+        $this->memberships = new ArrayCollection();
     }
 
     public function eraseCredentials(): void
@@ -197,6 +209,37 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setPrivacyAcceptedAt(?\DateTimeImmutable $privacyAcceptedAt): static
     {
         $this->privacyAcceptedAt = $privacyAcceptedAt;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Membership>
+     */
+    public function getMemberships(): Collection
+    {
+        return $this->memberships;
+    }
+
+    /**
+     * @return list<Organization>
+     */
+    public function getOrganizations(): array
+    {
+        return array_values(array_filter(array_map(
+            static fn (Membership $m) => $m->getOrganization(),
+            $this->memberships->getValues(),
+        )));
+    }
+
+    public function getLastOrganization(): ?Organization
+    {
+        return $this->lastOrganization;
+    }
+
+    public function setLastOrganization(?Organization $lastOrganization): static
+    {
+        $this->lastOrganization = $lastOrganization;
 
         return $this;
     }

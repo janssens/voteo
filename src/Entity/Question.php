@@ -16,9 +16,15 @@ class Question
     #[ORM\Column]
     private ?int $id = null;
 
+    /** Auteur. Null si son compte a été supprimé (la question d'organisation reste à l'organisation). */
     #[ORM\ManyToOne(inversedBy: 'questions')]
-    #[ORM\JoinColumn(nullable: false)]
-    private User $owner ;
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?User $owner = null;
+
+    /** Organisation propriétaire. Null = question personnelle de l'auteur. */
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'CASCADE')]
+    private ?Organization $organization = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $intro = null;
@@ -93,6 +99,18 @@ class Question
     public function setOwner(?User $owner): static
     {
         $this->owner = $owner;
+
+        return $this;
+    }
+
+    public function getOrganization(): ?Organization
+    {
+        return $this->organization;
+    }
+
+    public function setOrganization(?Organization $organization): static
+    {
+        $this->organization = $organization;
 
         return $this;
     }
