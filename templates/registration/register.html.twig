@@ -22,7 +22,11 @@
             {{ form_row(registrationForm.username) }}
             {{ form_row(registrationForm.email) }}
             {{ form_row(registrationForm.plainPassword) }}
-            {{ form_row(registrationForm.agreeTerms) }}
+            {{ form_row(registrationForm.agreeTerms, {
+                label: 'J\'ai lu et j\'accepte la <a href="' ~ path('privacy_policy') ~ '" target="_blank" rel="noopener">politique de confidentialité</a>. Je m\'engage à n\'ajouter que des contacts qui s\'attendent à recevoir mes questions.',
+                label_html: true,
+                translation_domain: false,
+            }) }}
 
             <div class="form-actions">
                 <button type="submit" class="btn btn-lg btn-block">Créer mon compte</button>

@@ -53,6 +53,9 @@ class DashboardController extends AbstractDashboardController
         yield MenuItem::linkToDashboard('Dashboard', 'fa fa-home');
         yield MenuItem::linkToCrud('Listes de contacts', 'fa fa-send',ContactList::class);
         yield MenuItem::linkToCrud('Questions', 'fa fa-question',Question::class);
+        yield MenuItem::section('Compte');
+        yield MenuItem::linkToRoute('Mon compte et mes données', 'fa fa-user-shield', 'account');
+        yield MenuItem::linkToRoute('Politique de confidentialité', 'fa fa-file-lines', 'privacy_policy');
         // yield MenuItem::linkToCrud('The Label', 'fas fa-list', EntityClass::class);
     }
 }

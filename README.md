@@ -105,7 +105,12 @@ DATABASE_URL="mysql://user:pass@localhost:3306/base?serverVersion=10.11.2-MariaD
 MAILER_DSN=smtp://user:pass@mail.mondomaine.fr:465
 DEFAULT_URI=https://voteo.mondomaine.fr
 TRANSACTIONAL_MAIL_SENDER=no-reply@mondomaine.fr
+LEGAL_PUBLISHER_NAME="Association Exemple"
+LEGAL_PUBLISHER_ADDRESS="1 rue de l'Exemple, 75000 Paris"
+LEGAL_PUBLISHER_EMAIL=contact@mondomaine.fr
 ```
+
+Les variables `LEGAL_*` alimentent les mentions légales et la politique de confidentialité (voir [Informations légales et RGPD](#informations-légales-et-rgpd)).
 
 > [!WARNING]
 > Le dossier cible ne doit contenir que Voteo : `--delete` y supprime tout ce qui n'est pas dans le dépôt. Si `FTP_SERVER_DIR` est vide, utilisez un compte FTP dédié dont le dossier est celui du projet. Les valeurs `/`, `~` et `public_html` sont refusées.
@@ -148,6 +153,35 @@ Lancer le workflow suffit dans la plupart des cas. Deux actions restent manuelle
   ```
 
 Si le FTP coupe en cours d'envoi (`ECONNRESET`, timeout), l'IP du runner a peut-être été bloquée par le pare-feu o2switch : vérifiez dans *Outil de déblocage d'IP* (cPanel), puis relancez le workflow.
+
+## Informations légales et RGPD
+
+Les pages [/mentions-legales](templates/legal/notice.html.twig) et [/confidentialite](templates/legal/privacy.html.twig) affichent des informations tirées de [config/packages/legal.yaml](config/packages/legal.yaml), elles-mêmes lues dans des variables d'environnement. Les valeurs par défaut sont dans `.env`. Modifiez-les dans `.env.local` en développement, et dans le secret `ENV_PROD` en production.
+
+| Variable | Contenu |
+|---|---|
+| `LEGAL_SITE_NAME` | nom affiché du service |
+| `LEGAL_PUBLISHER_NAME` | éditeur : nom ou raison sociale (**obligatoire**) |
+| `LEGAL_PUBLISHER_STATUS` | forme juridique (association loi 1901, SAS…) |
+| `LEGAL_PUBLISHER_ADDRESS` | adresse de l'éditeur (**obligatoire**) |
+| `LEGAL_PUBLISHER_REGISTRATION` | SIRET, RCS, RNA… |
+| `LEGAL_PUBLISHER_VAT` | n° de TVA intracommunautaire |
+| `LEGAL_PUBLISHER_EMAIL` | email de contact (**obligatoire**) |
+| `LEGAL_PUBLISHER_PHONE` | téléphone |
+| `LEGAL_DIRECTOR` | directeur·rice de la publication (par défaut : l'éditeur) |
+| `LEGAL_HOST_NAME`, `LEGAL_HOST_ADDRESS`, `LEGAL_HOST_PHONE`, `LEGAL_HOST_URL` | hébergeur (o2switch par défaut) |
+| `LEGAL_PRIVACY_EMAIL` | contact pour les demandes RGPD (par défaut : email de l'éditeur) |
+| `LEGAL_DPO_NAME` | délégué·e à la protection des données, s'il y en a un |
+| `LEGAL_LOGS_RETENTION` | durée de conservation des journaux du serveur |
+| `LEGAL_UPDATED_AT` | date de mise à jour de la politique (`AAAA-MM-JJ`) |
+
+Une valeur vide masque la ligne. Si elle est obligatoire, la page affiche « à renseigner » à la place.
+
+Fonctionnalités liées :
+
+- **Inscription** : la case de consentement renvoie vers la politique, et sa date d'acceptation est enregistrée.
+- **Mon compte** (`/compte`) : l'organisateur modifie ses informations, télécharge toutes ses données (JSON) et supprime son compte, avec tout son contenu.
+- **Mes données** (`/mes-donnees/{lien}`) : chaque membre voit les données le concernant et peut les supprimer. Le lien figure au bas de chaque email, avec l'organisateur et la liste à l'origine de l'envoi.
 
 ## Structure du front
 

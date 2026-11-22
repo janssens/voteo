@@ -1,0 +1,85 @@
+{% extends 'base.html.twig' %}
+{% import 'legal/_macros.html.twig' as l %}
+
+{% block title %}Mentions légales{% endblock %}
+{% block meta_description %}Mentions légales du site {{ legal.site_name }} : éditeur, hébergeur, propriété intellectuelle.{% endblock %}
+
+{#
+    Les informations ci-dessous proviennent de config/packages/legal.yaml (variables LEGAL_* du fichier .env).
+    Une valeur vide est masquée, sauf si elle est obligatoire : la mention « à renseigner » s'affiche alors.
+#}
+{% block body %}
+<div class="container narrow">
+    <article class="card prose">
+        <h1 class="h2">Mentions légales</h1>
+        <p class="muted">Conformément à l'article 6 de la loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie numérique (LCEN).</p>
+
+        <h2>Éditeur du site</h2>
+        <dl class="legal-list">
+            <dt>Nom ou raison sociale</dt>
+            <dd>{{ l.required(legal.publisher_name) }}</dd>
+            {% if legal.publisher_status %}
+                <dt>Forme juridique</dt>
+                <dd>{{ legal.publisher_status }}</dd>
+            {% endif %}
+            <dt>Adresse</dt>
+            <dd>{{ l.required(legal.publisher_address) }}</dd>
+            {% if legal.publisher_registration %}
+                <dt>Immatriculation</dt>
+                <dd>{{ legal.publisher_registration }}</dd>
+            {% endif %}
+            {% if legal.publisher_vat %}
+                <dt>N° de TVA intracommunautaire</dt>
+                <dd>{{ legal.publisher_vat }}</dd>
+            {% endif %}
+            <dt>Email</dt>
+            <dd>{{ l.mailto(legal.publisher_email) }}</dd>
+            {% if legal.publisher_phone %}
+                <dt>Téléphone</dt>
+                <dd>{{ legal.publisher_phone }}</dd>
+            {% endif %}
+            <dt>Directeur·rice de la publication</dt>
+            <dd>{{ l.required(legal.director ?: legal.publisher_name) }}</dd>
+        </dl>
+
+        <h2>Hébergeur</h2>
+        <dl class="legal-list">
+            <dt>Nom</dt>
+            <dd>{{ l.required(legal.host_name) }}</dd>
+            <dt>Adresse</dt>
+            <dd>{{ l.required(legal.host_address) }}</dd>
+            {% if legal.host_phone %}
+                <dt>Téléphone</dt>
+                <dd>{{ legal.host_phone }}</dd>
+            {% endif %}
+            {% if legal.host_url %}
+                <dt>Site web</dt>
+                <dd><a href="{{ legal.host_url }}" rel="noopener">{{ legal.host_url|replace({'https://': '', 'http://': ''}) }}</a></dd>
+            {% endif %}
+        </dl>
+
+        <h2>Propriété intellectuelle</h2>
+        <p>
+            {{ legal.site_name }} repose sur le logiciel libre Voteo, distribué sous
+            <a href="https://github.com/janssens/voteo/blob/main/LICENSE" rel="noopener">licence MIT</a>.
+            Son code source est <a href="https://github.com/janssens/voteo" rel="noopener">disponible publiquement</a>.
+        </p>
+        <p>
+            Les contenus publiés par les organisateurs (questions, textes, listes de contacts) restent sous leur responsabilité.
+            Ils ne peuvent être réutilisés sans leur accord.
+        </p>
+
+        <h2>Données personnelles</h2>
+        <p>
+            Le traitement de vos données personnelles est décrit dans la
+            <a href="{{ path('privacy_policy') }}">politique de confidentialité</a>.
+        </p>
+
+        <h2>Signaler un contenu</h2>
+        <p>
+            Pour signaler un contenu illicite ou un usage abusif du service (envoi d'emails non sollicités notamment),
+            écrivez à {{ l.mailto(legal.publisher_email) }} en précisant l'adresse de la page ou de l'email concerné.
+        </p>
+    </article>
+</div>
+{% endblock %}

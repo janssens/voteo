@@ -1,0 +1,31 @@
+# Informations légales affichées sur /mentions-legales et /confidentialite.
+# Chaque valeur provient d'une variable d'environnement (valeurs par défaut dans .env) :
+# modifiez-les dans .env.local en développement, et dans le secret ENV_PROD en production.
+# Une valeur vide masque la ligne correspondante (ou affiche « à renseigner » si elle est obligatoire).
+parameters:
+    app.legal:
+        site_name: '%env(LEGAL_SITE_NAME)%'
+        site_url: '%env(DEFAULT_URI)%'
+        # Éditeur du site (personne physique ou morale)
+        publisher_name: '%env(LEGAL_PUBLISHER_NAME)%'
+        publisher_status: '%env(LEGAL_PUBLISHER_STATUS)%'
+        publisher_address: '%env(LEGAL_PUBLISHER_ADDRESS)%'
+        publisher_registration: '%env(LEGAL_PUBLISHER_REGISTRATION)%'
+        publisher_vat: '%env(LEGAL_PUBLISHER_VAT)%'
+        publisher_email: '%env(LEGAL_PUBLISHER_EMAIL)%'
+        publisher_phone: '%env(LEGAL_PUBLISHER_PHONE)%'
+        director: '%env(LEGAL_DIRECTOR)%'
+        # Hébergeur
+        host_name: '%env(LEGAL_HOST_NAME)%'
+        host_address: '%env(LEGAL_HOST_ADDRESS)%'
+        host_phone: '%env(LEGAL_HOST_PHONE)%'
+        host_url: '%env(LEGAL_HOST_URL)%'
+        # Données personnelles
+        privacy_email: '%env(LEGAL_PRIVACY_EMAIL)%'
+        dpo_name: '%env(LEGAL_DPO_NAME)%'
+        logs_retention: '%env(LEGAL_LOGS_RETENTION)%'
+        updated_at: '%env(LEGAL_UPDATED_AT)%'
+
+twig:
+    globals:
+        legal: '%app.legal%'

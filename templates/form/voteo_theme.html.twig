@@ -18,7 +18,8 @@
     <div class="form-row{% if errors|length > 0 %} has-error{% endif %}">
         <label class="form-check" for="{{ id }}">
             {{- form_widget(form) -}}
-            <span>{{ label is same as(false) ? '' : (translation_domain is same as(false) ? label : label|trans(label_translation_parameters, translation_domain)) }}</span>
+            {%- set label_text = label is same as(false) ? '' : (translation_domain is same as(false) ? label : label|trans(label_translation_parameters, translation_domain)) -%}
+            <span>{% if label_html|default(false) %}{{ label_text|raw }}{% else %}{{ label_text }}{% endif %}</span>
         </label>
         {{- form_help(form) -}}
         {{- form_errors(form) -}}

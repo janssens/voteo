@@ -1,0 +1,8 @@
+{#- Version texte de emails/_privacy_footer.html.twig (context : contact, answer). -#}
+{%- set list = contact.list -%}
+{%- set organizer = list ? list.owner : null %}
+
+--
+Vous recevez cet email car {{ organizer ? organizer.fullName : "l'organisateur" }} vous a ajouté·e à {{ list ? 'sa liste « ' ~ list.name ~ ' »' : "l'une de ses listes" }} sur {{ legal.site_name }}. Pour lui écrire, répondez simplement à ce message.
+Consulter ou supprimer mes données : {{ url('contact_data', {a_token: answer.token}) }}
+Politique de confidentialité : {{ url('privacy_policy') }}

@@ -1,0 +1,67 @@
+{% extends 'base.html.twig' %}
+{% import 'partials/_icons.html.twig' as icon %}
+
+{% block title %}Mon compte{% endblock %}
+
+{% block body %}
+<div class="container narrow">
+    <section class="card" aria-labelledby="account-title">
+        <header class="text-center">
+            <div class="icon-bubble" style="margin: 0 auto 1rem;">{{ icon.users }}</div>
+            <h1 id="account-title" class="h2">Mon compte</h1>
+            <p class="muted">
+                Connecté·e en tant que <strong>{{ app.user.username }}</strong>.
+                {% if not app.user.verified %}Votre adresse email n'est pas encore confirmée.{% endif %}
+            </p>
+        </header>
+
+        <h2 class="h3">Mes informations</h2>
+        {{ form_start(form, {attr: {novalidate: 'novalidate'}}) }}
+            {{ form_errors(form) }}
+            <div class="form-grid">
+                {{ form_row(form.firstname) }}
+                {{ form_row(form.lastname) }}
+            </div>
+            {{ form_row(form.email) }}
+            <div class="form-actions">
+                <button type="submit" class="btn">Enregistrer</button>
+            </div>
+        {{ form_end(form) }}
+
+        <h2 class="h3">Mes données</h2>
+        <p>
+            Votre compte contient {{ nb_lists }} liste{{ nb_lists > 1 ? 's' }},
+            {{ nb_contacts }} contact{{ nb_contacts > 1 ? 's' }} et
+            {{ nb_questions }} question{{ nb_questions > 1 ? 's' }}.
+            {% if app.user.privacyAcceptedAt %}
+                Politique de confidentialité acceptée le {{ app.user.privacyAcceptedAt|format_date('long', locale: 'fr') }}.
+            {% endif %}
+        </p>
+        <p>
+            <a class="btn btn-soft" href="{{ path('account_export') }}">Télécharger toutes mes données (JSON)</a>
+        </p>
+        <p class="muted">
+            Vous êtes responsable des données de vos contacts : supprimez ceux qui le demandent depuis
+            <a href="{{ path('admin') }}">Mon espace</a>. Chaque membre peut aussi supprimer ses données lui-même
+            depuis le lien présent dans les emails. <a href="{{ path('privacy_policy') }}">Politique de confidentialité</a>
+        </p>
+
+        <div class="danger-zone">
+            <h2 class="h3">Supprimer mon compte</h2>
+            <p>
+                Votre compte, vos listes, vos contacts, vos questions et toutes les réponses reçues seront
+                définitivement supprimés. Pensez à télécharger vos données avant. Cette action est irréversible.
+            </p>
+            <form method="post" action="{{ path('account_delete') }}"
+                  onsubmit="return confirm('Supprimer définitivement votre compte et toutes vos données ?');">
+                <input type="hidden" name="_token" value="{{ csrf_token('account_delete') }}">
+                <div class="form-row">
+                    <label class="form-label required" for="delete-password">Confirmez avec votre mot de passe</label>
+                    <input type="password" id="delete-password" name="password" class="form-control" autocomplete="current-password" required>
+                </div>
+                <button type="submit" class="btn btn-danger">Supprimer mon compte</button>
+            </form>
+        </div>
+    </section>
+</div>
+{% endblock %}

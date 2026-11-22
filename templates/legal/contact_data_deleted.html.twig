@@ -1,0 +1,25 @@
+{% extends 'base.html.twig' %}
+{% import 'partials/_icons.html.twig' as icon %}
+
+{% block title %}Données supprimées{% endblock %}
+
+{% block body %}
+<div class="container form-page">
+    <section class="card form-card text-center">
+        <div class="icon-bubble mint" style="margin: 0 auto 1rem;">{{ icon.check }}</div>
+        <h1 class="h2">Vos données ont été supprimées</h1>
+        <p class="muted">
+            Vos coordonnées et vos réponses ont été effacées. Vous ne recevrez plus les questions de cette liste.
+        </p>
+        {% if organizer %}
+            <p class="muted">
+                Si vous figurez sur d'autres listes de {{ organizer.fullName }}, utilisez le lien présent dans les
+                emails correspondants, ou écrivez-lui à <a href="mailto:{{ organizer.email }}">{{ organizer.email }}</a>.
+            </p>
+        {% endif %}
+        <div class="form-actions">
+            <a class="btn btn-soft" href="{{ path('home') }}">Retour à l'accueil</a>
+        </div>
+    </section>
+</div>
+{% endblock %}

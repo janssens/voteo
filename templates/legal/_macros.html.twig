@@ -1,0 +1,8 @@
+{# Affiche une valeur de configuration légale, ou un rappel visible si elle est obligatoire et vide. #}
+{% macro required(value) -%}
+    {%- if value -%}{{ value }}{%- else -%}<em class="legal-missing">à renseigner</em>{%- endif -%}
+{%- endmacro %}
+
+{% macro mailto(email) -%}
+    {%- if email -%}<a href="mailto:{{ email }}">{{ email }}</a>{%- else -%}<em class="legal-missing">à renseigner</em>{%- endif -%}
+{%- endmacro %}

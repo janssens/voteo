@@ -47,6 +47,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private bool $isVerified = false;
 
+    /** Date d'acceptation de la politique de confidentialité, à l'inscription (preuve du consentement). */
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $privacyAcceptedAt = null;
+
     public function __construct()
     {
         $this->questions = new ArrayCollection();
@@ -183,5 +187,22 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->isVerified = $isVerified;
 
         return $this;
+    }
+
+    public function getPrivacyAcceptedAt(): ?\DateTimeImmutable
+    {
+        return $this->privacyAcceptedAt;
+    }
+
+    public function setPrivacyAcceptedAt(?\DateTimeImmutable $privacyAcceptedAt): static
+    {
+        $this->privacyAcceptedAt = $privacyAcceptedAt;
+
+        return $this;
+    }
+
+    public function getFullName(): string
+    {
+        return trim($this->firstname.' '.$this->lastname);
     }
 }

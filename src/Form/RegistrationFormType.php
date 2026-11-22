@@ -63,9 +63,10 @@ class RegistrationFormType extends AbstractType
             ])
             ->add('agreeTerms', CheckboxType::class, [
                 'mapped' => false,
-                'label' => 'J\'accepte les conditions d\'utilisation',
+                // libellé avec liens défini dans templates/registration/register.html.twig
+                'label' => 'J\'ai lu et j\'accepte la politique de confidentialité',
                 'constraints' => [
-                    new IsTrue(message: 'Merci d\'accepter les conditions d\'utilisation.'),
+                    new IsTrue(message: 'Merci d\'accepter la politique de confidentialité.'),
                 ],
             ])
         ;

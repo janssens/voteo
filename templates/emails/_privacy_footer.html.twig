@@ -1,0 +1,11 @@
+{#- Mention d'information RGPD (art. 14) en bas des emails envoyés aux membres.
+    Context : contact, answer (token), preview (aperçu admin : contact et answer sont des tableaux). -#}
+{%- set list = preview|default(false) ? null : contact.list -%}
+{%- set organizer = list ? list.owner : null -%}
+<p style="margin: 32px 0 0; padding-top: 16px; border-top: 1px solid #e4e0f5; font-size: 12px; line-height: 1.5; color: #8a87a0;">
+    Vous recevez cet email car {{ organizer ? organizer.fullName : 'l\'organisateur' }} vous a ajouté·e à
+    {{ list ? 'sa liste « ' ~ list.name ~ ' »' : 'l\'une de ses listes' }} sur {{ legal.site_name }}.
+    Pour lui écrire, répondez simplement à ce message.<br>
+    <a href="{{ url('contact_data', {a_token: answer.token}) }}" style="color: #6c5ccf;">Consulter ou supprimer mes données</a>
+    &middot; <a href="{{ url('privacy_policy') }}" style="color: #6c5ccf;">Politique de confidentialité</a>
+</p>

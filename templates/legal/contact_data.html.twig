@@ -1,0 +1,69 @@
+{% extends 'base.html.twig' %}
+{% import 'partials/_icons.html.twig' as icon %}
+
+{% block title %}Mes données{% endblock %}
+
+{# Accès d'un membre aux données le concernant, via son lien personnel. Context : contact, answer, organizer. #}
+{% block body %}
+<div class="container narrow">
+    <section class="card">
+        <header class="text-center">
+            <div class="icon-bubble sky" style="margin: 0 auto 1rem;">{{ icon.shield }}</div>
+            <h1 class="h2">Vos données personnelles</h1>
+            <p class="muted">
+                {% if organizer %}{{ organizer.fullName }}{% else %}Un organisateur{% endif %} vous a ajouté·e à
+                {% if contact.list %}sa liste « {{ contact.list.name }} »{% else %}l'une de ses listes{% endif %}
+                pour vous consulter via {{ legal.site_name }}. Voici les données enregistrées à votre sujet.
+            </p>
+        </header>
+
+        <h2 class="h3">Coordonnées</h2>
+        <dl class="legal-list">
+            <dt>Prénom</dt><dd>{{ contact.firstname }}</dd>
+            <dt>Nom</dt><dd>{{ contact.lastname }}</dd>
+            <dt>Email</dt><dd>{{ contact.email }}</dd>
+            {% if organizer %}
+                <dt>Organisateur</dt><dd>{{ organizer.fullName }} (<a href="mailto:{{ organizer.email }}">{{ organizer.email }}</a>)</dd>
+            {% endif %}
+        </dl>
+
+        <h2 class="h3">Questions reçues et réponses</h2>
+        {% if contact.answers is empty %}
+            <p class="muted">Aucune question ne vous a encore été envoyée.</p>
+        {% else %}
+            <ul class="data-answers">
+                {% for a in contact.answers %}
+                    <li>
+                        <strong>{{ a.question.subject|personalize(contact, false) }}</strong><br>
+                        {% if a.choices is empty %}
+                            <span class="muted">Pas de réponse</span>
+                        {% else %}
+                            Votre réponse : {{ a.choices|map(c => c.label)|join(', ') }}
+                        {% endif %}
+                        {% if a.question.anonymous %}<span class="muted"> · réponses anonymes</span>{% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <p class="muted">
+            Pour corriger ces informations, contactez l'organisateur{% if organizer %} à <a href="mailto:{{ organizer.email }}">{{ organizer.email }}</a>{% endif %}
+            ou répondez simplement à l'un de ses emails.
+            En savoir plus : <a href="{{ path('privacy_policy') }}">politique de confidentialité</a>.
+        </p>
+
+        <div class="danger-zone">
+            <h2 class="h3">Supprimer mes données</h2>
+            <p>
+                Vos coordonnées et toutes vos réponses seront définitivement effacées, et vous ne recevrez plus les
+                questions de cette liste. Vos votes seront retirés des résultats. Cette action est irréversible.
+            </p>
+            <form method="post" action="{{ path('contact_data', {a_token: answer.token}) }}"
+                  onsubmit="return confirm('Supprimer définitivement vos données ?');">
+                <input type="hidden" name="_token" value="{{ csrf_token('contact_data_delete_' ~ answer.token) }}">
+                <button type="submit" class="btn btn-danger">Supprimer mes données</button>
+            </form>
+        </div>
+    </section>
+</div>
+{% endblock %}

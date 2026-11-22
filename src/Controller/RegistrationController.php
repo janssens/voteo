@@ -10,6 +10,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mime\Address;
@@ -20,8 +21,11 @@ use SymfonyCasts\Bundle\VerifyEmail\Exception\VerifyEmailExceptionInterface;
 
 class RegistrationController extends AbstractController
 {
-    public function __construct(private EmailVerifier $emailVerifier)
-    {
+    public function __construct(
+        private EmailVerifier $emailVerifier,
+        #[Autowire('%app.transactional_mail_sender%')] private string $sender,
+        #[Autowire('%app.transactional_mail_sender_friendlyname%')] private string $senderName,
+    ) {
     }
 
     #[Route('/register', name: 'app_register')]
@@ -37,6 +41,8 @@ class RegistrationController extends AbstractController
 
             // encode the plain password
             $user->setPassword($userPasswordHasher->hashPassword($user, $plainPassword));
+            // preuve du consentement à la politique de confidentialité (case obligatoire)
+            $user->setPrivacyAcceptedAt(new \DateTimeImmutable());
 
             $entityManager->persist($user);
             $entityManager->flush();
@@ -44,7 +50,7 @@ class RegistrationController extends AbstractController
             // generate a signed url and email it to the user
             $this->emailVerifier->sendEmailConfirmation('app_verify_email', $user,
                 (new TemplatedEmail())
-                    ->from(new Address('voteo@plopcom.fr', 'Voteo'))
+                    ->from(new Address($this->sender, $this->senderName))
                     ->to((string) $user->getEmail())
                     ->subject('Confirmez votre adresse email')
                     ->htmlTemplate('registration/confirmation_email.html.twig')

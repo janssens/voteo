@@ -31,3 +31,4 @@ Vous n'avez pas participé à cette consultation.
 {% endif %}
 Voir les résultats en ligne :
 {{ url('answer_form', { 'a_token' : answer.token }) }}
+{% include 'emails/_privacy_footer.txt.twig' %}

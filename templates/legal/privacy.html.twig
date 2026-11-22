@@ -1,0 +1,180 @@
+{% extends 'base.html.twig' %}
+{% import 'legal/_macros.html.twig' as l %}
+
+{% block title %}Politique de confidentialité{% endblock %}
+{% block meta_description %}Comment {{ legal.site_name }} traite vos données personnelles et comment exercer vos droits (RGPD).{% endblock %}
+
+{#
+    Les informations d'identité (éditeur, hébergeur, contact) proviennent de config/packages/legal.yaml
+    (variables LEGAL_* du fichier .env). Le texte lui-même se modifie ici.
+#}
+{% set privacy_email = legal.privacy_email ?: legal.publisher_email %}
+
+{% block body %}
+<div class="container narrow">
+    <article class="card prose">
+        <h1 class="h2">Politique de confidentialité</h1>
+        {% if legal.updated_at %}
+            <p class="muted">Dernière mise à jour : {{ legal.updated_at|format_date('long', locale: 'fr') }}</p>
+        {% endif %}
+
+        <p>
+            {{ legal.site_name }} permet à des organisateurs (associations, groupes, entreprises…) de poser des questions
+            à leurs membres par email. Cette page explique quelles données sont traitées, pourquoi, combien de temps,
+            et comment exercer vos droits, conformément au Règlement général sur la protection des données (RGPD)
+            et à la loi Informatique et Libertés.
+        </p>
+
+        <h2>En bref</h2>
+        <ul>
+            <li>Nous ne collectons que les données nécessaires au fonctionnement du service.</li>
+            <li>Aucune donnée n'est vendue, louée ni utilisée à des fins publicitaires.</li>
+            <li>Aucun cookie publicitaire ou de mesure d'audience : seuls des cookies techniques sont déposés.</li>
+            <li>Vous pouvez à tout moment consulter, exporter ou supprimer vos données.</li>
+        </ul>
+
+        <h2>Qui est responsable de vos données ?</h2>
+        <p>Deux situations sont à distinguer :</p>
+        <ul>
+            <li>
+                <strong>Vous avez un compte organisateur</strong> : l'éditeur du site,
+                {{ l.required(legal.publisher_name) }}{% if legal.publisher_address %} ({{ legal.publisher_address }}){% endif %},
+                est responsable du traitement de vos données de compte.
+            </li>
+            <li>
+                <strong>Vous avez reçu une question par email</strong> : c'est l'organisateur qui vous a ajouté·e à sa liste
+                qui est responsable du traitement. Il a saisi lui-même vos nom, prénom et adresse email, et décide des
+                questions qui vous sont envoyées. L'éditeur du site agit pour son compte, en tant que sous-traitant
+                (article 28 du RGPD), et n'utilise vos données pour aucune autre finalité.
+            </li>
+        </ul>
+        <p>
+            Contact pour toute question relative à vos données : {{ l.mailto(privacy_email) }}{% if legal.dpo_name %}
+            (délégué·e à la protection des données : {{ legal.dpo_name }}){% endif %}.
+        </p>
+
+        <h2>Quelles données sont traitées ?</h2>
+        <h3>Organisateurs</h3>
+        <ul>
+            <li>Identité : prénom, nom, nom d'utilisateur.</li>
+            <li>Contact : adresse email (utilisée aussi comme adresse de réponse des emails envoyés à vos membres).</li>
+            <li>Authentification : mot de passe, conservé uniquement sous forme chiffrée (hachage irréversible).</li>
+            <li>Date d'acceptation de la présente politique.</li>
+            <li>Contenus créés : listes de contacts, questions, choix de réponse, paramètres d'envoi.</li>
+        </ul>
+        <h3>Membres (destinataires des questions)</h3>
+        <ul>
+            <li>Prénom, nom et adresse email, saisis par l'organisateur.</li>
+            <li>Les réponses données à chaque question, ainsi qu'un lien personnel de réponse.</li>
+        </ul>
+        <h3>Données techniques</h3>
+        <ul>
+            <li>
+                Journaux du serveur (adresse IP, date, page demandée), tenus par l'hébergeur pour la sécurité du service
+                et conservés {{ legal.logs_retention ?: '12 mois' }} au plus.
+            </li>
+        </ul>
+
+        <h2>Pourquoi et sur quelle base ?</h2>
+        <table class="legal-table">
+            <thead>
+                <tr><th scope="col">Finalité</th><th scope="col">Base légale</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Créer et gérer votre compte organisateur, vous permettre de vous connecter</td>
+                    <td>Exécution du contrat (conditions d'utilisation du service)</td>
+                </tr>
+                <tr>
+                    <td>Envoyer les questions aux membres, enregistrer leurs réponses, calculer et envoyer les résultats</td>
+                    <td>Déterminée par l'organisateur (intérêt légitime de l'association ou du groupe à consulter ses membres, le plus souvent)</td>
+                </tr>
+                <tr>
+                    <td>Vérifier votre adresse email, assurer la sécurité du service, prévenir les abus</td>
+                    <td>Intérêt légitime de l'éditeur</td>
+                </tr>
+                <tr>
+                    <td>Conserver les journaux de connexion</td>
+                    <td>Obligation légale (LCEN)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>Qui peut voir vos données ?</h2>
+        <ul>
+            <li><strong>L'organisateur</strong> voit les coordonnées de ses membres et le détail de leurs réponses.</li>
+            <li>
+                <strong>Les autres membres consultés</strong> voient les résultats. Sauf si la question est marquée
+                « anonyme », le prénom des votants apparaît à côté de chaque réponse.
+                Le mode anonyme est indiqué dans l'email reçu.
+            </li>
+            <li>
+                <strong>L'hébergeur</strong>, {{ l.required(legal.host_name) }}{% if legal.host_address %} ({{ legal.host_address }}){% endif %},
+                qui héberge le site, la base de données et le serveur d'envoi des emails.
+            </li>
+        </ul>
+        <p>Vos données ne sont transmises à aucun autre tiers, sauf obligation légale (réquisition judiciaire).</p>
+
+        <h2>Combien de temps sont-elles conservées ?</h2>
+        <ul>
+            <li><strong>Compte organisateur</strong> : jusqu'à sa suppression par vous-même, depuis « Mon compte ». Toutes les données associées (listes, contacts, questions, réponses) sont alors supprimées immédiatement.</li>
+            <li><strong>Données des membres</strong> : jusqu'à leur suppression par l'organisateur, par le membre lui-même (lien « Consulter ou supprimer mes données » présent dans chaque email), ou par la suppression du compte de l'organisateur.</li>
+            <li><strong>Journaux du serveur</strong> : {{ legal.logs_retention ?: '12 mois' }} au plus.</li>
+        </ul>
+
+        <h2>Cookies</h2>
+        <p>Le site ne dépose que des cookies strictement nécessaires à son fonctionnement, qui ne requièrent pas votre consentement :</p>
+        <ul>
+            <li>un cookie de session, pour vous garder connecté·e et protéger les formulaires (supprimé à la fermeture du navigateur) ;</li>
+            <li>un cookie « se souvenir de moi », uniquement si vous cochez cette case à la connexion (7 jours).</li>
+        </ul>
+        <p>Aucun outil de mesure d'audience, de publicité ou de réseau social n'est utilisé.</p>
+
+        <h2>Sécurité</h2>
+        <ul>
+            <li>Les échanges avec le site sont chiffrés (HTTPS).</li>
+            <li>Les mots de passe sont hachés et ne sont jamais conservés en clair.</li>
+            <li>Chaque lien de réponse est personnel et impossible à deviner. Ne le transférez pas : il donne accès à votre réponse.</li>
+            <li>Chaque organisateur n'a accès qu'à ses propres listes et questions.</li>
+        </ul>
+
+        <h2>Vos droits</h2>
+        <p>
+            Vous disposez d'un droit d'accès, de rectification, d'effacement, de limitation, d'opposition et de
+            portabilité de vos données, ainsi que du droit de définir des directives sur leur sort après votre décès.
+        </p>
+        <h3>Vous êtes organisateur</h3>
+        <ul>
+            <li>Modifiez vos informations, téléchargez toutes vos données (fichier JSON) ou supprimez votre compte depuis
+                {% if app.user %}<a href="{{ path('account') }}">Mon compte</a>{% else %}la page « Mon compte », une fois connecté·e{% endif %}.</li>
+        </ul>
+        <h3>Vous avez reçu une question</h3>
+        <ul>
+            <li>Cliquez sur le lien « Consulter ou supprimer mes données » en bas de l'email : vous y verrez les données vous concernant et pourrez les supprimer, ce qui met fin aux envois.</li>
+            <li>Pour corriger vos coordonnées, ou si vous ne souhaitez plus être consulté·e, vous pouvez aussi répondre directement à l'email : votre message parvient à l'organisateur.</li>
+        </ul>
+        <p>
+            Dans tous les cas, vous pouvez écrire à {{ l.mailto(privacy_email) }}. Nous répondons dans un délai d'un mois.
+            Si vous estimez, après nous avoir contactés, que vos droits ne sont pas respectés, vous pouvez adresser une
+            réclamation à la <a href="https://www.cnil.fr/fr/plaintes" rel="noopener">CNIL</a>.
+        </p>
+
+        <h2>Engagements des organisateurs</h2>
+        <p>En créant un compte, l'organisateur s'engage à :</p>
+        <ul>
+            <li>n'ajouter que des personnes avec lesquelles il a une relation (membres, adhérents, collègues…) et qui peuvent raisonnablement s'attendre à être consultées ;</li>
+            <li>ne pas utiliser le service pour de la prospection commerciale ou des envois non sollicités ;</li>
+            <li>tenir ses listes à jour et supprimer les contacts qui le demandent ;</li>
+            <li>informer ses membres de l'usage de leurs données, la présente page pouvant servir de support.</li>
+        </ul>
+
+        <h2>Modifications</h2>
+        <p>
+            Cette politique peut évoluer. La date de dernière mise à jour figure en haut de la page. En cas de changement
+            important, les organisateurs en seront informés par email.
+        </p>
+
+        <p class="muted">Voir aussi les <a href="{{ path('legal_notice') }}">mentions légales</a>.</p>
+    </article>
+</div>
+{% endblock %}
