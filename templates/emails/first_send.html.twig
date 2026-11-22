@@ -9,7 +9,8 @@
     - one "Valider" link is rendered per combination (2^n), all hidden,
       and a generated selector reveals the one matching the current state.
     Clients without :checked support (Gmail, Outlook desktop...) get the fallback
-    link to the online answer page instead.
+    link to the online answer page instead, and an always-visible "Répondre en ligne" text link
+    covers clients that hide both (FairEmail reformatted view).
 
     Context: question, choices, answer (token), contact (for {{ prenom }} / {{ nom }} variables),
     preview (admin live preview: links are disabled). In preview mode, question, choices,
@@ -113,6 +114,14 @@
             </p>
         </div>
     </div>
+    {#
+        Always visible, never targeted by any CSS rule: some clients (FairEmail's reformatted view...)
+        drop the inline display:none block AND apply the @media rule hiding the fallback,
+        leaving no way to vote. This link is the last resort.
+    #}
+    <p style="margin: 8px 0 16px; font-family: {{ font }}; font-size: 13px; color: #6b6785;">
+        Les choix ne s'affichent pas&nbsp;? <a href="{{ url('answer_form', { 'a_token' : answer.token }) }}" style="color: #6c5ccf;">Répondre en ligne</a>
+    </p>
     {% endif %}
     <div class="{{ p }}-fallback" style="margin: 16px 0;">
         <p style="font-family: {{ font }};">Plusieurs réponses sont possibles pour cette question.</p>
