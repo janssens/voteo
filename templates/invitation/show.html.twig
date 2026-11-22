@@ -1,0 +1,81 @@
+{% extends 'base.html.twig' %}
+{% import 'partials/_icons.html.twig' as icon %}
+
+{#
+    Lien d'invitation à rejoindre une organisation.
+    Context : state (invalid | expired | anonymous | confirm), invitation (null si invalid),
+    token et already_member (state confirm).
+#}
+{% set organization = invitation ? invitation.organization : null %}
+
+{% block title %}{{ organization ? 'Rejoindre ' ~ organization.name : 'Invitation' }}{% endblock %}
+
+{% block body %}
+<div class="container form-page">
+    <section class="card form-card text-center" aria-labelledby="invitation-title">
+        {% if state in ['invalid', 'expired'] %}
+            <div class="icon-bubble rose" style="margin: 0 auto 1rem;">{{ icon.alert }}</div>
+            <h1 id="invitation-title" class="h2">
+                {{ state == 'expired' ? 'Cette invitation a expiré' : 'Invitation introuvable' }}
+            </h1>
+            <p class="muted">
+                {% if state == 'expired' %}
+                    Le lien pour rejoindre « {{ organization.name }} » n'est valable que 7 jours.
+                {% else %}
+                    Ce lien n'est pas valable : l'invitation a peut-être déjà été acceptée, annulée ou renvoyée avec un nouveau lien.
+                {% endif %}
+                Demandez à un membre de l'organisation de vous envoyer une nouvelle invitation.
+            </p>
+            <div class="form-actions">
+                <a class="btn btn-soft" href="{{ path('home') }}">Retour à l'accueil</a>
+            </div>
+        {% else %}
+            <div class="icon-bubble" style="margin: 0 auto 1rem;">{{ icon.users }}</div>
+            <h1 id="invitation-title" class="h2">Rejoindre « {{ organization.name }} »</h1>
+            <p>
+                {% if invitation.invitedBy %}<strong>{{ invitation.invitedBy.fullName }}</strong> vous invite{% else %}Vous êtes invité·e{% endif %}
+                à rejoindre l'organisation <strong>{{ organization.name }}</strong> sur {{ legal.site_name }}.
+            </p>
+            <p class="muted">
+                Les membres partagent les listes de contacts et les questions, et ont tous les mêmes droits :
+                créer, modifier, supprimer, inviter ou retirer des membres.
+            </p>
+
+            {% if state == 'anonymous' %}
+                <p>Connectez-vous pour accepter l'invitation. Vous n'avez pas encore de compte ? Créez-le en quelques secondes.</p>
+                <div class="form-actions">
+                    <a class="btn" href="{{ path('app_login') }}">Se connecter</a>
+                    <a class="btn btn-soft" href="{{ path('app_register') }}">Créer un compte</a>
+                </div>
+                <p class="muted">
+                    Après la création du compte, confirmez votre adresse email puis connectez-vous :
+                    vous reviendrez sur cette page. Sinon, cliquez à nouveau sur le lien reçu par email.
+                </p>
+            {% elseif already_member %}
+                <p>Vous faites déjà partie de cette organisation.</p>
+                <form method="post" action="{{ path('invitation_accept', {token: token}) }}" class="form-actions">
+                    <input type="hidden" name="_token" value="{{ csrf_token('invitation_accept') }}">
+                    <button type="submit" class="btn">Ouvrir l'organisation</button>
+                </form>
+            {% else %}
+                {% if invitation.email|lower != app.user.email|lower %}
+                    <p class="muted">
+                        Cette invitation a été envoyée à {{ invitation.email }}. Vous êtes connecté·e en tant que
+                        {{ app.user.fullName }} ({{ app.user.email }}) : c'est ce compte qui rejoindra l'organisation.
+                    </p>
+                {% endif %}
+                <div class="form-actions">
+                    <form method="post" action="{{ path('invitation_accept', {token: token}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('invitation_accept') }}">
+                        <button type="submit" class="btn">Accepter l'invitation</button>
+                    </form>
+                    <form method="post" action="{{ path('invitation_decline', {token: token}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('invitation_decline') }}">
+                        <button type="submit" class="btn btn-soft">Refuser</button>
+                    </form>
+                </div>
+            {% endif %}
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

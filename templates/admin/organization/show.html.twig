@@ -1,6 +1,6 @@
 {% extends '@EasyAdmin/page/content.html.twig' %}
 
-{# Fiche de l'organisation active. Context : organization, memberships (triés), can_leave (plus d'un membre). #}
+{# Fiche de l'organisation active. Context : organization, memberships (triés), invitations (récentes d'abord), can_leave (plus d'un membre). #}
 {% block content_title %}{{ organization.name }}{% endblock %}
 
 {% block page_actions %}
@@ -55,7 +55,54 @@
             </tbody>
         </table>
         {% if not can_leave %}
-            <p class="form-text">Vous êtes le seul membre : invitez quelqu'un avant de pouvoir quitter l'organisation, ou supprimez-la.</p>
+            <p class="form-text">Vous êtes le seul membre : invitez quelqu'un (ci-dessous) avant de pouvoir quitter l'organisation, ou supprimez-la.</p>
+        {% endif %}
+
+        <h2 class="h4 mt-5">Inviter quelqu'un</h2>
+        <p class="text-muted">
+            La personne reçoit un email avec un lien valable 7 jours. Elle se connecte, ou crée un compte si elle n'en a pas,
+            puis accepte l'invitation. Elle aura alors les mêmes droits que vous.
+        </p>
+        <form method="post" action="{{ path('admin_organization_invite') }}" class="vt-invite-form">
+            <input type="hidden" name="_token" value="{{ csrf_token('organization_invite') }}">
+            <label class="visually-hidden" for="invite_email">Adresse email</label>
+            <input class="form-control" type="email" id="invite_email" name="email" required maxlength="255" autocomplete="off" placeholder="prenom.nom@exemple.fr">
+            <button type="submit" class="btn btn-primary"><i class="fa fa-paper-plane"></i> Envoyer l'invitation</button>
+        </form>
+
+        {% if invitations is not empty %}
+            <h3 class="h5 mt-4">Invitations en attente <span class="badge badge-secondary">{{ invitations|length }}</span></h3>
+            <table class="table datagrid">
+                <thead>
+                    <tr><th>Email</th><th>Invitée par</th><th>Lien valable jusqu'au</th><th></th></tr>
+                </thead>
+                <tbody>
+                    {% for invitation in invitations %}
+                        <tr>
+                            <td>{{ invitation.email }}</td>
+                            <td>{{ invitation.invitedBy ? invitation.invitedBy.fullName : '—' }}</td>
+                            <td>
+                                {% if invitation.expired %}
+                                    <span class="badge badge-warning">expirée</span>
+                                {% else %}
+                                    {{ invitation.expiresAt|format_datetime('medium', 'short', locale: 'fr') }}
+                                {% endif %}
+                            </td>
+                            <td class="text-end text-nowrap">
+                                <form method="post" class="d-inline" action="{{ path('admin_organization_invitation_resend', {invitationId: invitation.id}) }}">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('invitation_resend_' ~ invitation.id) }}">
+                                    <button type="submit" class="btn btn-sm btn-secondary">Renvoyer</button>
+                                </form>
+                                <form method="post" class="d-inline" action="{{ path('admin_organization_invitation_cancel', {invitationId: invitation.id}) }}"
+                                      onsubmit="return confirm({{ ('Annuler l\'invitation de ' ~ invitation.email ~ ' ?')|json_encode(constant('JSON_UNESCAPED_UNICODE'))|e('html_attr') }})">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('invitation_cancel_' ~ invitation.id) }}">
+                                    <button type="submit" class="btn btn-sm btn-danger">Annuler</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         {% endif %}
 
         <section class="vt-danger-zone mt-5">

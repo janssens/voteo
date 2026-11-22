@@ -42,3 +42,11 @@ body.ea-sidebar-width-compact .vt-context-switcher {
         grid-template-columns: 1fr;
     }
 }
+.vt-invite-form {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.vt-invite-form .form-control {
+    flex: 1 1 240px;
+}

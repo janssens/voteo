@@ -1,0 +1,14 @@
+{# Invitation à rejoindre une organisation (version texte). Context : invitation, organization, inviter, site_name, invitation_url. #}
+{% autoescape false %}
+Bonjour,
+
+{{ inviter.fullName }} vous invite à rejoindre l'organisation « {{ organization.name }} » sur {{ site_name }}, pour préparer ensemble les questions envoyées à vos membres et partager les listes de contacts.
+
+Voir l'invitation :
+{{ invitation_url }}
+
+Vous pourrez vous connecter, ou créer un compte si vous n'en avez pas encore. Ce lien est personnel et valable jusqu'au {{ invitation.expiresAt|format_datetime('long', 'short', locale: 'fr') }}.
+
+Une question ? Répondez simplement à cet email, votre message parviendra à {{ inviter.firstname }}.
+Si vous ne vous attendiez pas à cette invitation, vous pouvez ignorer ce message.
+{% endautoescape %}

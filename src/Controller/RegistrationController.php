@@ -25,6 +25,10 @@ class RegistrationController extends AbstractController
     public function register(Request $request, UserPasswordHasherInterface $userPasswordHasher, EntityManagerInterface $entityManager): Response
     {
         $user = new User();
+        // Arrivé depuis un lien d'invitation à une organisation : on propose l'adresse invitée.
+        if ($request->isMethod('GET') && \is_string($invitedEmail = $request->getSession()->get(InvitationController::SESSION_EMAIL))) {
+            $user->setEmail($invitedEmail);
+        }
         $form = $this->createForm(RegistrationFormType::class, $user);
         $form->handleRequest($request);
 

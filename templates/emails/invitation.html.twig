@@ -1,0 +1,25 @@
+{# Invitation à rejoindre une organisation. Context : invitation, organization, inviter, site_name, invitation_url. #}
+<div style="font-family: 'Segoe UI', Roboto, Arial, sans-serif; color: #2f2b45; max-width: 520px; margin: 0 auto; padding: 24px; background: #f6f4ff; border-radius: 16px;">
+    <h1 style="font-size: 22px; margin: 0 0 16px;">Rejoignez « {{ organization.name }} »</h1>
+
+    <p>Bonjour,</p>
+
+    <p>
+        {{ inviter.fullName }} vous invite à rejoindre l'organisation <strong>{{ organization.name }}</strong> sur {{ site_name }},
+        pour préparer ensemble les questions envoyées à vos membres et partager les listes de contacts.
+    </p>
+
+    <p style="text-align: center; margin: 28px 0;">
+        <a href="{{ invitation_url }}" style="display: inline-block; padding: 12px 24px; background: #6c5ccf; color: #ffffff; text-decoration: none; font-weight: bold; border-radius: 999px;">Voir l'invitation</a>
+    </p>
+
+    <p style="color: #6b6785; font-size: 14px;">
+        Vous pourrez vous connecter, ou créer un compte si vous n'en avez pas encore.
+        Ce lien est personnel et valable jusqu'au {{ invitation.expiresAt|format_datetime('long', 'short', locale: 'fr') }}.
+    </p>
+
+    <p style="color: #6b6785; font-size: 14px;">
+        Une question ? Répondez simplement à cet email, votre message parviendra à {{ inviter.firstname }}.
+        Si vous ne vous attendiez pas à cette invitation, vous pouvez ignorer ce message.
+    </p>
+</div>

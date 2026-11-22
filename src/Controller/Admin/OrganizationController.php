@@ -2,13 +2,16 @@
 
 namespace App\Controller\Admin;
 
+use App\Entity\Invitation;
 use App\Entity\Membership;
 use App\Entity\Organization;
 use App\Entity\User;
 use App\Form\OrganizationType;
 use App\Organization\CurrentContext;
+use App\Organization\InvitationException;
 use App\Organization\LastMemberException;
 use App\Organization\OrganizationManager;
+use App\Repository\InvitationRepository;
 use App\Repository\MembershipRepository;
 use App\Repository\OrganizationRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -17,6 +20,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 /**
  * Sélecteur global de contexte (personnel / organisation) et gestion de l'organisation active.
@@ -102,9 +107,13 @@ final class OrganizationController extends AbstractController
         $memberships = $organization->getMemberships()->toArray();
         usort($memberships, static fn (Membership $a, Membership $b) => strcasecmp((string) $a->getUser()?->getFullName(), (string) $b->getUser()?->getFullName()));
 
+        $invitations = $organization->getInvitations()->toArray();
+        usort($invitations, static fn (Invitation $a, Invitation $b) => $b->getCreatedAt() <=> $a->getCreatedAt());
+
         return $this->render('admin/organization/show.html.twig', [
             'organization' => $organization,
             'memberships' => $memberships,
+            'invitations' => $invitations,
             'can_leave' => \count($memberships) > 1,
         ]);
     }
@@ -135,6 +144,68 @@ final class OrganizationController extends AbstractController
             'form' => $form,
             'organization' => $organization,
         ]);
+    }
+
+    #[AdminRoute(path: '/organisation/invitations', name: 'organization_invite', options: ['methods' => ['POST']])]
+    public function invite(Request $request, ValidatorInterface $validator): Response
+    {
+        if (null === $organization = $this->currentContext->getOrganization()) {
+            return $this->noActiveOrganization();
+        }
+        if (!$this->isCsrfTokenValid('organization_invite', (string) $request->request->get('_token'))) {
+            return $this->expired('admin_organization_show');
+        }
+
+        $email = trim((string) $request->request->get('email'));
+        $violations = $validator->validate($email, [
+            new Assert\NotBlank(message: 'Merci d\'indiquer l\'adresse email de la personne à inviter.'),
+            new Assert\Email(message: 'Cette adresse email ne semble pas valide.'),
+            new Assert\Length(max: 255),
+        ]);
+        if (\count($violations) > 0) {
+            $this->addFlash('danger', (string) $violations[0]->getMessage());
+
+            return $this->redirectToRoute('admin_organization_show');
+        }
+
+        try {
+            $this->manager->invite($organization, $email, $this->getAppUser());
+        } catch (InvitationException $e) {
+            $this->addFlash('danger', $e->getMessage());
+
+            return $this->redirectToRoute('admin_organization_show');
+        }
+
+        $this->addFlash('success', sprintf('Invitation envoyée à %s. Le lien est valable 7 jours.', mb_strtolower($email)));
+
+        return $this->redirectToRoute('admin_organization_show');
+    }
+
+    #[AdminRoute(path: '/organisation/invitations/{invitationId}/renvoyer', name: 'organization_invitation_resend', options: ['methods' => ['POST'], 'requirements' => ['invitationId' => '\d+']])]
+    public function resendInvitation(Request $request, int $invitationId, InvitationRepository $invitations): Response
+    {
+        if (null === $invitation = $this->findActiveInvitation($request, $invitationId, $invitations, 'invitation_resend_')) {
+            return $this->expired('admin_organization_show');
+        }
+
+        $this->manager->sendInvitation($invitation, $this->getAppUser());
+        $this->addFlash('success', sprintf('Invitation renvoyée à %s, avec un nouveau lien valable 7 jours.', $invitation->getEmail()));
+
+        return $this->redirectToRoute('admin_organization_show');
+    }
+
+    #[AdminRoute(path: '/organisation/invitations/{invitationId}/annuler', name: 'organization_invitation_cancel', options: ['methods' => ['POST'], 'requirements' => ['invitationId' => '\d+']])]
+    public function cancelInvitation(Request $request, int $invitationId, InvitationRepository $invitations): Response
+    {
+        if (null === $invitation = $this->findActiveInvitation($request, $invitationId, $invitations, 'invitation_cancel_')) {
+            return $this->expired('admin_organization_show');
+        }
+
+        $email = $invitation->getEmail();
+        $this->manager->cancelInvitation($invitation);
+        $this->addFlash('success', sprintf('L\'invitation de %s est annulée : son lien ne fonctionne plus.', $email));
+
+        return $this->redirectToRoute('admin_organization_show');
     }
 
     /** Retire un membre de l'organisation active, ou permet à l'utilisateur de la quitter (son propre membership). */
@@ -200,6 +271,25 @@ final class OrganizationController extends AbstractController
         $this->addFlash('success', sprintf('L\'organisation « %s » et tout son contenu ont été supprimés.', $name));
 
         return $this->redirectToRoute('admin');
+    }
+
+    /**
+     * Invitation de l'organisation active visée par une action, après contrôle du jeton CSRF.
+     * Null si le jeton est invalide ; 404 si l'invitation n'existe pas ou appartient à une autre organisation.
+     */
+    private function findActiveInvitation(Request $request, int $invitationId, InvitationRepository $invitations, string $csrfPrefix): ?Invitation
+    {
+        if (!$this->isCsrfTokenValid($csrfPrefix.$invitationId, (string) $request->request->get('_token'))) {
+            return null;
+        }
+
+        $invitation = $invitations->find($invitationId);
+        $organization = $this->currentContext->getOrganization();
+        if (null === $invitation || null === $organization || $invitation->getOrganization() !== $organization) {
+            throw $this->createNotFoundException();
+        }
+
+        return $invitation;
     }
 
     private function noActiveOrganization(): Response

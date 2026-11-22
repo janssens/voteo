@@ -3,6 +3,7 @@
 namespace App\Organization;
 
 use App\Entity\ContactList;
+use App\Entity\Invitation;
 use App\Entity\Membership;
 use App\Entity\Organization;
 use App\Entity\Question;
@@ -10,12 +11,90 @@ use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
- * Règles de gestion des organisations : départ d'un membre, suppression.
+ * Règles de gestion des organisations : invitations, départ d'un membre, suppression.
  */
 final class OrganizationManager
 {
-    public function __construct(private readonly EntityManagerInterface $em)
+    /** Garde-fou contre l'envoi massif d'invitations depuis une organisation. */
+    public const MAX_PENDING_INVITATIONS = 50;
+
+    public function __construct(
+        private readonly EntityManagerInterface $em,
+        private readonly InvitationMailer $invitationMailer,
+    ) {
+    }
+
+    /**
+     * Invite une adresse email. S'il existe déjà une invitation pour cette adresse, elle est renouvelée
+     * (nouveau lien, nouvelle échéance) au lieu d'en créer une seconde.
+     *
+     * @throws InvitationException
+     */
+    public function invite(Organization $organization, string $email, User $inviter): Invitation
     {
+        $email = mb_strtolower(trim($email));
+
+        foreach ($organization->getMemberships() as $membership) {
+            if (mb_strtolower((string) $membership->getUser()?->getEmail()) === $email) {
+                throw new InvitationException(sprintf('%s fait déjà partie de l\'organisation.', $membership->getUser()->getFullName()));
+            }
+        }
+
+        $invitation = null;
+        foreach ($organization->getInvitations() as $existing) {
+            if ($existing->getEmail() === $email) {
+                $invitation = $existing;
+                break;
+            }
+        }
+
+        if (null === $invitation) {
+            if ($organization->getInvitations()->count() >= self::MAX_PENDING_INVITATIONS) {
+                throw new InvitationException(sprintf('Cette organisation a déjà %d invitations en attente : annulez-en avant d\'en envoyer de nouvelles.', self::MAX_PENDING_INVITATIONS));
+            }
+            $invitation = new Invitation($organization, $email, $inviter);
+            $organization->getInvitations()->add($invitation);
+            $this->em->persist($invitation);
+        }
+
+        $this->sendInvitation($invitation, $inviter);
+
+        return $invitation;
+    }
+
+    /** Renvoie une invitation : nouveau lien (l'ancien ne fonctionne plus) et nouvelle échéance. */
+    public function sendInvitation(Invitation $invitation, User $sender): void
+    {
+        $token = $invitation->renewToken();
+        $this->em->flush();
+
+        $this->invitationMailer->send($invitation, $token, $sender);
+    }
+
+    public function cancelInvitation(Invitation $invitation): void
+    {
+        $invitation->getOrganization()?->getInvitations()->removeElement($invitation);
+        $this->em->remove($invitation);
+        $this->em->flush();
+    }
+
+    /**
+     * Fait entrer $user dans l'organisation de l'invitation (lien valable pour le compte qui l'ouvre,
+     * quelle que soit son adresse) et consomme l'invitation.
+     *
+     * @throws InvitationException si l'invitation a expiré
+     */
+    public function accept(Invitation $invitation, User $user): Organization
+    {
+        if ($invitation->isExpired()) {
+            throw new InvitationException('Cette invitation a expiré. Demandez à un membre de l\'organisation de vous la renvoyer.');
+        }
+
+        $organization = $invitation->getOrganization();
+        $organization->addMember($user, $invitation->getInvitedBy());
+        $this->cancelInvitation($invitation);
+
+        return $organization;
     }
 
     /**
