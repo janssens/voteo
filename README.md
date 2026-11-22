@@ -30,7 +30,7 @@ Voteo est une application web **libre, gratuite et open-source** qui permet aux 
 
 - [Symfony 7.4](https://symfony.com/) (PHP ≥ 8.3), Twig, Doctrine ORM
 - [EasyAdmin](https://github.com/EasyCorp/EasyAdminBundle) pour l'espace organisateur
-- PostgreSQL 16
+- MariaDB 10.11
 - [FrankenPHP](https://frankenphp.dev/) et Docker
 - [Mailpit](https://mailpit.axllent.org/) pour intercepter les emails en développement
 
@@ -101,7 +101,7 @@ Pour renvoyer tous les fichiers (si un fichier semble ne pas avoir été mis à 
 
 ```dotenv
 APP_SECRET=une_chaine_aleatoire_longue
-DATABASE_URL="postgresql://user:pass@localhost:5432/base?serverVersion=16&charset=utf8"
+DATABASE_URL="mysql://user:pass@localhost:3306/base?serverVersion=10.11.2-MariaDB&charset=utf8mb4"
 MAILER_DSN=smtp://user:pass@mail.mondomaine.fr:465
 DEFAULT_URI=https://voteo.mondomaine.fr
 TRANSACTIONAL_MAIL_SENDER=no-reply@mondomaine.fr
@@ -113,8 +113,8 @@ TRANSACTIONAL_MAIL_SENDER=no-reply@mondomaine.fr
 **Dans cPanel :**
 
 - *Domaines* : faites pointer le domaine (ou sous-domaine) vers `voteo/public`.
-- *Sélectionner une version de PHP* : PHP 8.3 ou plus, avec les extensions `intl` et `pdo_pgsql`.
-- *PostgreSQL* : créez la base et l'utilisateur correspondant à `DATABASE_URL`.
+- *Sélectionner une version de PHP* : PHP 8.3 ou plus, avec les extensions `intl` et `pdo_mysql`.
+- *Bases de données MySQL* : créez la base et l'utilisateur (avec tous les privilèges sur la base) correspondant à `DATABASE_URL`. Ajustez `serverVersion` à la version de MariaDB affichée dans phpMyAdmin.
 - *Tâches cron* : ajoutez l'envoi des résultats, par exemple toutes les 5 minutes :
 
   ```cron
