@@ -1,0 +1,32 @@
+{% extends 'base.html.twig' %}
+{% import 'partials/_icons.html.twig' as icon %}
+
+{% block title %}Renvoyer l'email de confirmation{% endblock %}
+
+{% block body %}
+<div class="container form-page">
+    <section class="card form-card" aria-labelledby="resend-title">
+        <header class="form-card-header">
+            <div class="icon-bubble sky">{{ icon.mail }}</div>
+            <h1 id="resend-title" class="h2">Confirmer mon adresse</h1>
+            <p>Lien expiré ou email introuvable ? Indiquez l'adresse utilisée à l'inscription pour recevoir un nouveau lien.</p>
+        </header>
+
+        <form method="post" action="{{ path('app_verify_resend') }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('verify_resend') }}">
+            <div class="form-row">
+                <label class="form-label required" for="resend-email">Adresse email</label>
+                <input type="email" id="resend-email" name="email" class="form-control" autocomplete="email" required autofocus>
+                <p class="form-help">Pensez à vérifier vos courriers indésirables.</p>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-lg btn-block">Recevoir un nouveau lien</button>
+            </div>
+        </form>
+
+        <footer class="form-footer">
+            <p><a href="{{ path('app_login') }}">Retour à la connexion</a></p>
+        </footer>
+    </section>
+</div>
+{% endblock %}

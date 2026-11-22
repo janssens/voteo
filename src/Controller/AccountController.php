@@ -8,15 +8,12 @@ use App\Privacy\PersonalData;
 use App\Repository\ContactListRepository;
 use App\Security\EmailVerifier;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
-use Symfony\Component\Mime\Address;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -34,8 +31,6 @@ final class AccountController extends AbstractController
         EntityManagerInterface $em,
         ContactListRepository $lists,
         EmailVerifier $emailVerifier,
-        #[Autowire('%app.transactional_mail_sender%')] string $sender,
-        #[Autowire('%app.transactional_mail_sender_friendlyname%')] string $senderName,
     ): Response {
         /** @var User $user */
         $user = $this->getUser();
@@ -52,14 +47,8 @@ final class AccountController extends AbstractController
             $em->flush();
 
             if ($emailChanged) {
-                $emailVerifier->sendEmailConfirmation('app_verify_email', $user,
-                    (new TemplatedEmail())
-                        ->from(new Address($sender, $senderName))
-                        ->to((string) $user->getEmail())
-                        ->subject('Confirmez votre adresse email')
-                        ->htmlTemplate('registration/confirmation_email.html.twig')
-                );
-                $this->addFlash('success', 'Vos informations ont été mises à jour. Un email de confirmation a été envoyé à votre nouvelle adresse.');
+                $emailVerifier->sendConfirmation($user);
+                $this->addFlash('success', 'Vos informations ont été mises à jour. Un email de confirmation a été envoyé à votre nouvelle adresse : cliquez sur le lien avant votre prochaine connexion.');
             } else {
                 $this->addFlash('success', 'Vos informations ont été mises à jour.');
             }

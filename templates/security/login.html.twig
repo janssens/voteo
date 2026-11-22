@@ -13,7 +13,14 @@
         </header>
 
         {% if error %}
-            <div class="alert alert-error" role="alert">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+            <div class="alert alert-error" role="alert">
+                <span>
+                    {{ error.messageKey|trans(error.messageData, 'security') }}
+                    {% if error.messageKey == constant('App\\Security\\UserChecker::UNVERIFIED_MESSAGE') %}
+                        <a href="{{ path('app_verify_resend') }}">Renvoyer l'email de confirmation</a>
+                    {% endif %}
+                </span>
+            </div>
         {% endif %}
 
         {% if app.user %}
@@ -48,6 +55,7 @@
         </form>
 
         <footer class="form-footer">
+            <p><a href="{{ path('app_verify_resend') }}">Vous n'avez pas reçu l'email de confirmation ?</a></p>
             <p>Pas encore de compte ? C'est gratuit.</p>
             <a href="{{ path('app_register') }}">Créer un compte</a>
         </footer>
