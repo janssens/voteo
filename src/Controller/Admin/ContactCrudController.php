@@ -19,9 +19,9 @@ class ContactCrudController extends AbstractCrudController
         return Contact::class;
     }
 
-    protected static function ownerPath(): array
+    protected static function scopeRoot(): array
     {
-        return ['owned_list.owner', ['owned_list' => 'entity.list']];
+        return ['owned_list', ['owned_list' => 'entity.list']];
     }
 
     public function configureFields(string $pageName): iterable

@@ -50,9 +50,9 @@ class QuestionCrudController extends AbstractCrudController
         return Question::class;
     }
 
-    protected static function ownerPath(): array
+    protected static function scopeRoot(): array
     {
-        return ['entity.owner', []];
+        return ['entity', []];
     }
 
     /**
@@ -76,12 +76,14 @@ class QuestionCrudController extends AbstractCrudController
     {
         $question = new Question();
         $question->setOwner($this->getUser());
+        $question->setOrganization($this->currentContext->getOrganization());
 
         return $question;
     }
     public function configureCrud(Crud $crud): Crud
     {
-        return $crud
+        // Redéfinit celui du trait : sans cet appel, détail / édition / suppression ne seraient pas protégés.
+        return $this->restrictToOwner($crud)
             // Form + live email preview side by side
             ->overrideTemplate('crud/edit', 'admin/question/edit.html.twig')
             ->overrideTemplate('crud/new', 'admin/question/new.html.twig')
@@ -128,10 +130,15 @@ class QuestionCrudController extends AbstractCrudController
                 ->setHelp('Une fois la date de clôture passée, tous les destinataires reçoivent les résultats par email.'),
             TextEditorField::new('outro','Texte après question')->setHelp(Personalizer::VARIABLES_HELP),
             AssociationField::new('lists',label: 'Liste(s) concernée(s)')
-                // Uniquement les listes du propriétaire de la question (ou de l'utilisateur, à la création)
-                ->setQueryBuilder(fn (QueryBuilder $qb) => $qb
-                    ->andWhere('entity.owner = :list_owner')
-                    ->setParameter('list_owner', $this->getContext()?->getEntity()?->getInstance()?->getOwner() ?? $this->getUser())),
+                // Uniquement les listes du même contexte que la question : son organisation, ou les listes personnelles de son auteur.
+                // Le formulaire refuse aussi toute liste hors de cette requête (choix soumis invalides).
+                ->setQueryBuilder(function (QueryBuilder $qb) {
+                    $question = $this->getContext()?->getEntity()?->getInstance();
+
+                    return $question instanceof Question
+                        ? self::applyScope($qb, 'entity', $question->getOrganization(), $question->getOwner())
+                        : self::applyScope($qb, 'entity', $this->currentContext->getOrganization(), $this->getUser());
+                }),
             PercentField::new('responseRate',label: 'Réponses')->hideOnForm(),
         ];
     }
@@ -253,6 +260,10 @@ class QuestionCrudController extends AbstractCrudController
 
         // Custom logic for the clone, for example:
         $clone->setSubject('[clone] '.$question->getSubject());
+        // Le clone reste dans le contexte de l'original (mêmes listes). Dans une organisation, son auteur est celui qui duplique.
+        if (null !== $question->getOrganization()) {
+            $clone->setOwner($this->getUser());
+        }
         $clone->setSent(false);
         $clone->setResultsSentAt(null);
 

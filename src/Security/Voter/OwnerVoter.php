@@ -13,7 +13,10 @@ use Symfony\Component\Security\Core\Authorization\Voter\Vote;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 
 /**
- * Restreint l'accès aux données d'un organisateur : questions, choix, listes et contacts.
+ * Restreint l'accès aux questions, choix, listes et contacts :
+ *  - ressource d'une organisation : tout membre de l'organisation ;
+ *  - ressource personnelle : son auteur uniquement ;
+ *  - ROLE_ADMIN : tout.
  * Utilisé comme "entity permission" par les CRUD EasyAdmin, et dans les actions personnalisées.
  *
  * @extends Voter<string, Question|Choice|ContactList|Contact|null>
@@ -52,12 +55,20 @@ final class OwnerVoter extends Voter
             return true;
         }
 
-        $owner = match (true) {
-            $subject instanceof Question, $subject instanceof ContactList => $subject->getOwner(),
-            $subject instanceof Choice => $subject->getQuestion()?->getOwner(),
-            $subject instanceof Contact => $subject->getList()?->getOwner(),
+        // Ressource racine qui porte l'organisation et l'auteur.
+        $resource = match (true) {
+            $subject instanceof Question, $subject instanceof ContactList => $subject,
+            $subject instanceof Choice => $subject->getQuestion(),
+            $subject instanceof Contact => $subject->getList(),
         };
+        if (null === $resource) {
+            return false;
+        }
 
-        return null !== $owner && $owner->getId() === $user->getId();
+        if (null !== $organization = $resource->getOrganization()) {
+            return $organization->hasMember($user);
+        }
+
+        return $resource->getOwner()?->getId() === $user->getId();
     }
 }

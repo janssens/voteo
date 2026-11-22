@@ -106,6 +106,8 @@ class Organization
 
         $membership = new Membership($user, $this, $invitedBy);
         $this->memberships->add($membership);
+        // Garde le côté inverse à jour, pour que $user->getOrganizations() soit juste sans recharger.
+        $user->getMemberships()->add($membership);
 
         return $membership;
     }
@@ -113,6 +115,7 @@ class Organization
     public function removeMembership(Membership $membership): static
     {
         $this->memberships->removeElement($membership);
+        $membership->getUser()?->getMemberships()->removeElement($membership);
 
         return $this;
     }

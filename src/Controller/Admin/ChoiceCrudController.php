@@ -20,9 +20,9 @@ class ChoiceCrudController extends AbstractCrudController
         return Choice::class;
     }
 
-    protected static function ownerPath(): array
+    protected static function scopeRoot(): array
     {
-        return ['owned_question.owner', ['owned_question' => 'entity.question']];
+        return ['owned_question', ['owned_question' => 'entity.question']];
     }
 
     public function configureAssets(Assets $assets): Assets

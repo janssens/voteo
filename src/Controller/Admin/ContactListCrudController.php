@@ -36,14 +36,16 @@ class ContactListCrudController extends AbstractCrudController
         return ContactList::class;
     }
 
-    protected static function ownerPath(): array
+    protected static function scopeRoot(): array
     {
-        return ['entity.owner', []];
+        return ['entity', []];
     }
 
     public function createEntity(string $entityFqcn): ContactList
     {
-        return (new ContactList())->setOwner($this->getUser());
+        return (new ContactList())
+            ->setOwner($this->getUser())
+            ->setOrganization($this->currentContext->getOrganization());
     }
 
     public function configureFields(string $pageName): iterable
