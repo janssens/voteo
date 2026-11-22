@@ -8,6 +8,12 @@
         </div>
     </div>
     <p class="vt-preview-meta">
+        {# Question en cours d'édition, ou nouvelle question déjà rattachée au contexte actif (createEntity) #}
+        {% set preview_question = ea.entity.instance ?? null %}
+        {% if preview_question %}
+            {% set preview_organizer = organizer(preview_question) %}
+            <span>De&nbsp;: {{ preview_organizer.senderName }}{% if preview_organizer.replyToEmail %} · réponses à {{ preview_organizer.replyToEmail }}{% endif %}</span>
+        {% endif %}
         <span>Objet&nbsp;: <span class="vt-preview-subject">—</span></span>
         <span>Destinataire fictif&nbsp;: {{ constant('App\\Controller\\Admin\\EmailPreviewController::SAMPLE_CONTACT').firstname }} {{ constant('App\\Controller\\Admin\\EmailPreviewController::SAMPLE_CONTACT').lastname }}</span>
     </p>

@@ -63,6 +63,12 @@ class ContactList
         return $this;
     }
 
+    /** Nom de l'auteur pour l'affichage (colonne « Auteur ») ; null si son compte a été supprimé. */
+    public function getAuthorName(): ?string
+    {
+        return $this->owner?->getFullName();
+    }
+
     public function getOrganization(): ?Organization
     {
         return $this->organization;

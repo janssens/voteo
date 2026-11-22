@@ -8,6 +8,7 @@ use App\Entity\Contact;
 use App\Entity\ContactList;
 use App\Entity\Question;
 use App\Event\SendQuestionEvent;
+use App\Mail\OrganizerResolver;
 use App\Mail\Personalizer;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
@@ -23,7 +24,7 @@ class QuestionEmailer
     private $params;
     private $em;
 
-    public function __construct(MailerInterface $mailer,ParameterBagInterface $params,EntityManagerInterface $em)
+    public function __construct(MailerInterface $mailer,ParameterBagInterface $params,EntityManagerInterface $em, private readonly OrganizerResolver $organizers)
     {
         $this->mailer = $mailer;
         $this->params = $params;
@@ -63,14 +64,12 @@ class QuestionEmailer
             }
         }
         $this->em->flush();
+        // « Prénom via Voteo » ou « Organisation via Voteo », réponses à l'auteur ou à l'organisation
+        $organizer = $this->organizers->for($question);
         /** @var Contact $recipient */
         foreach ($recipients as $recipient) {
-            $email = (new TemplatedEmail())
-                ->from(new Address($this->params->get('app.transactional_mail_sender'), $this->params->get('app.transactional_mail_sender_friendlyname')))
+            $email = $this->organizers->address(new TemplatedEmail(), $organizer)
                 ->to(new Address($recipient->getEmail(), $recipient->getFullName()))
-                //->cc('cc@example.com')
-                //->bcc('bcc@example.com')
-                ->replyTo($question->getOwner()->getEmail())
                 ->subject(Personalizer::personalize($question->getSubject(), $recipient, false))
                 ->htmlTemplate('emails/first_send.html.twig')
                 ->textTemplate('emails/first_send.txt.twig')

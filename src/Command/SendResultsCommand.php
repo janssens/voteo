@@ -4,6 +4,7 @@ namespace App\Command;
 
 use App\Entity\Answer;
 use App\Entity\Question;
+use App\Mail\OrganizerResolver;
 use App\Mail\Personalizer;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
@@ -13,7 +14,6 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
@@ -30,8 +30,7 @@ final class SendResultsCommand extends Command
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly MailerInterface $mailer,
-        #[Autowire('%app.transactional_mail_sender%')] private readonly string $sender,
-        #[Autowire('%app.transactional_mail_sender_friendlyname%')] private readonly string $senderName,
+        private readonly OrganizerResolver $organizers,
     ) {
         parent::__construct();
     }
@@ -82,12 +81,11 @@ final class SendResultsCommand extends Command
             }
 
             $sent = 0;
+            $organizer = $this->organizers->for($question);
             foreach ($answers as $answer) {
                 $contact = $answer->getContact();
-                $email = (new TemplatedEmail())
-                    ->from(new Address($this->sender, $this->senderName))
+                $email = $this->organizers->address(new TemplatedEmail(), $organizer)
                     ->to(new Address($contact->getEmail(), $contact->getFullName()))
-                    ->replyTo($question->getOwner()->getEmail())
                     ->subject('Résultats : '.Personalizer::personalize($question->getSubject(), $contact, false))
                     ->htmlTemplate('emails/results.html.twig')
                     ->textTemplate('emails/results.txt.twig')

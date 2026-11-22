@@ -62,14 +62,12 @@ trait OwnedByUserTrait
         }
 
         return [
-            TextField::new('owner.fullName', 'Auteur')
+            // getAuthorName() plutôt que "owner.fullName" : EasyAdmin affiche « Inaccessible » si owner est null.
+            TextField::new('authorName', 'Auteur')
                 ->onlyOnIndex()
                 ->setSortable(false)
                 // Chaîne renvoyée = HTML pour EasyAdmin : on échappe.
-                ->formatValue(static fn ($value, $entity) => htmlspecialchars(
-                    $entity?->getOwner()?->getFullName() ?? 'Compte supprimé',
-                    \ENT_QUOTES,
-                )),
+                ->formatValue(static fn (?string $value) => htmlspecialchars($value ?? 'Compte supprimé', \ENT_QUOTES)),
         ];
     }
 
