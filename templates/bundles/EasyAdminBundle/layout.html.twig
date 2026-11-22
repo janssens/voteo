@@ -1,0 +1,9 @@
+{% extends '@!EasyAdmin/layout.html.twig' %}
+
+{# Sélecteur global de contexte (personnel / organisations), en tête du menu latéral. #}
+{% block main_menu_wrapper %}
+    {% if app.user %}
+        {{ include('admin/_context_switcher.html.twig') }}
+    {% endif %}
+    {{ parent() }}
+{% endblock main_menu_wrapper %}

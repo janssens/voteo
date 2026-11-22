@@ -1,0 +1,19 @@
+{# Sélecteur global : choisit le contexte de travail (personnel ou organisation). Voir App\Organization\CurrentContext. #}
+{% set active = current_context.organization %}
+<form class="vt-context-switcher" method="post" action="{{ path('admin_context_switch') }}">
+    <label for="vt-context" class="vt-context-label">Espace de travail</label>
+    <select id="vt-context" name="context" class="form-select form-select-sm" autocomplete="off" onchange="this.form.submit()">
+        <option value="perso" {{ active is null ? 'selected' }}>Personnel</option>
+        {% set organizations = current_context.availableOrganizations %}
+        {% if organizations is not empty %}
+            <optgroup label="Organisations">
+                {% for organization in organizations %}
+                    <option value="{{ organization.id }}" {{ active and active.id == organization.id ? 'selected' }}>{{ organization.name }}</option>
+                {% endfor %}
+            </optgroup>
+        {% endif %}
+        <option value="new">+ Créer une organisation</option>
+    </select>
+    <input type="hidden" name="_token" value="{{ csrf_token('context_switch') }}">
+    <noscript><button type="submit" class="btn btn-sm btn-secondary mt-1">Changer</button></noscript>
+</form>

@@ -105,6 +105,7 @@ class QuestionCrudController extends AbstractCrudController
             IdField::new('id')->hideOnForm(),
             BooleanField::new('sent')->hideOnForm(),
             TextField::new('subject','Sujet')->setHelp(Personalizer::VARIABLES_HELP),
+            ...$this->authorColumn(),
             TextEditorField::new('intro','Texte avant question')->setHelp(Personalizer::VARIABLES_HELP),
             CollectionField::new('choices','Choix')->useEntryCrudForm(ChoiceCrudController::class),
             BooleanField::new('is_multichoices','Plusieurs réponses possibles'),

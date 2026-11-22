@@ -11,6 +11,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Collection\FilterCollection;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
 use EasyCorp\Bundle\EasyAdminBundle\Dto\SearchDto;
+use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Contracts\Service\Attribute\Required;
 
@@ -47,6 +48,29 @@ trait OwnedByUserTrait
     protected function restrictToOwner(Crud $crud): Crud
     {
         return $crud->setEntityPermission(OwnerVoter::OWNER);
+    }
+
+    /**
+     * Colonne « Auteur » de l'index, utile seulement dans une organisation (en personnel, c'est toujours soi).
+     *
+     * @return list<TextField>
+     */
+    protected function authorColumn(): array
+    {
+        if (null === $this->currentContext->getOrganization()) {
+            return [];
+        }
+
+        return [
+            TextField::new('owner.fullName', 'Auteur')
+                ->onlyOnIndex()
+                ->setSortable(false)
+                // Chaîne renvoyée = HTML pour EasyAdmin : on échappe.
+                ->formatValue(static fn ($value, $entity) => htmlspecialchars(
+                    $entity?->getOwner()?->getFullName() ?? 'Compte supprimé',
+                    \ENT_QUOTES,
+                )),
+        ];
     }
 
     public function createIndexQueryBuilder(SearchDto $searchDto, EntityDto $entityDto, FieldCollection $fields, FilterCollection $filters): QueryBuilder

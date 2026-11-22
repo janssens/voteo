@@ -21,14 +21,14 @@ class Organization
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Assert\NotBlank]
+    #[Assert\NotBlank(message: 'Merci d\'indiquer le nom de l\'organisation.')]
     #[Assert\Length(max: 255)]
     private ?string $name = null;
 
     /** Adresse de réponse (reply-to) des emails envoyés au nom de l'organisation. */
     #[ORM\Column(length: 255)]
-    #[Assert\NotBlank]
-    #[Assert\Email]
+    #[Assert\NotBlank(message: 'Merci d\'indiquer l\'adresse email de contact.')]
+    #[Assert\Email(message: 'Cette adresse email ne semble pas valide.')]
     #[Assert\Length(max: 255)]
     private ?string $contactEmail = null;
 

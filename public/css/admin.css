@@ -1,0 +1,24 @@
+/* Sélecteur global de contexte, en tête du menu latéral EasyAdmin */
+.vt-context-switcher {
+    padding: 0 var(--sidebar-menu-items-padding-right) 12px var(--sidebar-menu-items-padding-left);
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--sidebar-border-color);
+}
+.vt-context-label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+/* Menu latéral replié : pas la place pour le sélecteur */
+body.ea-sidebar-width-compact .vt-context-switcher {
+    display: none;
+}
+
+/* Formulaires simples hors CRUD (ex. création d'organisation) */
+.vt-narrow-panel {
+    max-width: 640px;
+}

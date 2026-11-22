@@ -53,6 +53,7 @@ class ContactListCrudController extends AbstractCrudController
         return [
             IdField::new('id')->hideOnForm(),
             TextField::new('name','Nom'),
+            ...$this->authorColumn(),
             CollectionField::new('contacts','Contacts')
             ->setEntryIsComplex(true)
             ->useEntryCrudForm(ContactCrudController::class),

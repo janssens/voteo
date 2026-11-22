@@ -1,0 +1,25 @@
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{# Création d'une organisation. Context : form. #}
+{% form_theme form 'bootstrap_5_layout.html.twig' %}
+
+{% block content_title %}Créer une organisation{% endblock %}
+
+{% block main %}
+    <div class="vt-narrow-panel">
+        <p class="text-muted">
+            Dans une organisation, tous les membres partagent les listes et les questions, et ont les mêmes droits :
+            créer, modifier, supprimer, inviter ou retirer des membres. Vous pourrez inviter d'autres personnes ensuite.
+        </p>
+
+        {{ form_start(form, {attr: {novalidate: 'novalidate'}}) }}
+            {{ form_errors(form) }}
+            {{ form_row(form.name) }}
+            {{ form_row(form.contactEmail) }}
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-primary">Créer l'organisation</button>
+                <a class="btn btn-secondary" href="{{ path('admin') }}">Annuler</a>
+            </div>
+        {{ form_end(form) }}
+    </div>
+{% endblock %}
